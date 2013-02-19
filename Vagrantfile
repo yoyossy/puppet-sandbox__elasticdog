@@ -34,4 +34,31 @@ Vagrant::Config.run do |config|
       end
     end
   end
+
+
+  config.vm.define :client3 do |client_config|
+    client_config.vm.box = 'timhuegdon.com_.-vagrant-boxes_.-ubuntu-11.10.box'
+    client_config.vm.box_url = 'http://timhuegdon.com/vagrant-boxes/ubuntu-11.10.box'
+#    client_config.vm.box_url = 'http://files.vagrantup.com/lucid32.box'
+    client_config.vm.host_name = "client3.#{domain}"
+#    client_config.vm.network :bridged
+    client_config.vm.network :hostonly, '172.16.32.13'
+    client_config.vm.provision :shell, :path => "apt-get_update.sh"
+  end
+  
+  config.vm.define :rails_master do |rails_master_config|
+    rails_master_config.vm.box       = 'precise32_2013_02'
+    rails_master_config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
+    rails_master_config.vm.host_name = "master.#{domain}"
+    rails_master_config.vm.network :bridged
+    rails_master_config.vm.network :hostonly, '172.16.32.110'
+    rails_master_config.vm.forward_port 3000, 3000
+    rails_master_config.vm.provision :puppet,
+      :manifests_path => 'rails_master_puppet/manifests',
+      :module_path    => 'rails_master_puppet/modules',
+      :manifest_file  => 'rails_master.pp'
+  end 
+
+
+
 end
