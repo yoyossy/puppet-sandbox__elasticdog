@@ -1,0 +1,52 @@
+[Description]
+
+Python installed Ubuntu instance.
+Ubuntu 12.04 (precise 32bit) + python 2.7.3 + pip + virtualenv + virtualenvwrapper installed
+
+Need to create .virtualenvs directory
+
+** how to install Django **
+1) create virtualenv with wrapper
+
+mkvirtualenv XXX
+
+2) install Django
+
+pip install Django
+
+Keep your src in local (host) directory
+eg. ln -s /vagrant/virtualenvs/XXX/src ./src
+
+install mptt package from /vagrant/utils/django-mptt-0.5.2
+
+When starting a web server use follow command to be accessible from anywhere (expecially from host machine)
+python manage.py runserver [::]:8000
+or
+python manage.py runserver 0.0.0.0:8000
+
+So you can simply run the web application from your browser
+ex. http://localhost:8000 or http://127.0.0.1:8000 (forwarded port)
+
+Here is a good reference url:
+http://blog.smalleycreative.com/tutorials/setup-a-django-vm-with-vagrant-virtualbox-and-chef/
+
+And this repo is based on my another vagrant repo:
+https://github.com/jas0nkim/my-vagrant-puppet-lamp
+
+3) install mod_wsgi for apache2 (optional)
+    apt-get install libapache2-mod-wsgi
+    and config apache alias/virtualhost setting for your Django application
+
+[Pre-installed Debian/Ubuntu packages]
+
+mysql-server
+libmysqlclient-dev
+python-debian - python 2.7.3
+python-mysqldb
+python-imaging
+python-pip
+python-virtualenv
+virtualenvwrapper
+curl
+vim
+

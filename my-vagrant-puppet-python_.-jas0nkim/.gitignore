@@ -1,0 +1,4 @@
+.vagrant
+*.pyc
+Applications
+vagrant_webroot
