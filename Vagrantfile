@@ -53,12 +53,35 @@ Vagrant::Config.run do |config|
     rails_master_config.vm.network :bridged
     rails_master_config.vm.network :hostonly, '172.16.32.110'
     rails_master_config.vm.forward_port 3000, 3000
+    rails_master_config.vm.customize [
+        'modifyvm', :id,
+        '--name', 'rails_master',
+        '--memory', 256
+      ]
     rails_master_config.vm.provision :puppet,
       :manifests_path => 'rails_master_puppet/manifests',
       :module_path    => 'rails_master_puppet/modules',
       :manifest_file  => 'rails_master.pp'
   end 
 
+  config.vm.define :python_master do |python_master_config|
+    python_master_config.vm.box       = 'precise32_2013_02'
+    python_master_config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
+    python_master_config.vm.host_name = "master.#{domain}"
+    python_master_config.vm.network :bridged
+    python_master_config.vm.network :hostonly, '172.16.32.120'
+    python_master_config.vm.forward_port 80, 12080
+    python_master_config.vm.forward_port 8000, 8120
+    python_master_config.vm.customize [
+        'modifyvm', :id,
+        '--name', 'python_master',
+        '--memory', 256
+      ]
+    python_master_config.vm.provision :puppet,
+      :manifests_path => 'my-vagrant-puppet-python_.-jas0nkim/manifests',
+      :module_path    => 'my-vagrant-puppet-python_.-jas0nkim/modules',
+      :manifest_file  => 'python_master.pp'
+  end 
 
 
 end
