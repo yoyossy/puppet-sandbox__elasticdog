@@ -16,6 +16,7 @@ Vagrant::Config.run do |config|
       node_config.vm.box_url = 'https://bitbucket.org/begolu/boxes/downloads/' + node_config.vm.box + '.box'
       node_config.vm.host_name = node[:hostname] + '.' + domain
       node_config.vm.network :hostonly, node[:ip]
+      node_config.vm.share_folder "HG_SVN",  "/HG_SVN", "M:/HG_SVN"
 
       if node[:fwdhost]
         node_config.vm.forward_port(node[:fwdguest], node[:fwdhost])
