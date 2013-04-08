@@ -9,7 +9,8 @@ puppet_nodes = [
   {:hostname => 'client2', :ip => '172.16.32.12', :box => 'precise64_begolu_2013_02'},
 ]
 
-Vagrant::Config.run do |config|
+Vagrant.configure("1") do |config|
+# Vagrant::Config.run do |config|
   puppet_nodes.each do |node|
     config.vm.define node[:hostname] do |node_config|
       node_config.vm.box = node[:box]
