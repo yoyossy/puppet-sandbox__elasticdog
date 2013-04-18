@@ -55,12 +55,12 @@ Vagrant.configure("2") do |config|
     client_config.vm.hostname = "client3.#{domain}"
 #    client_config.vm.network :bridged
 #    client_config.vm.network :hostonly, '172.16.32.13'
-    client_config.vm.provision :shell, :path => File.join(".","provision.sh" )
-    client_config.vm.synced_folder "database/", "/srv/database"
-    client_config.vm.synced_folder "database/data/", "/var/lib/mysql", :extra => 'dmode=777,fmode=777'
-    client_config.vm.synced_folder "config/", "/srv/config"
-    client_config.vm.synced_folder "config/nginx-config/sites/", "/etc/nginx/custom-sites"
-    client_config.vm.synced_folder "www/", "/srv/www/", :owner => "www-data"
+    client_config.vm.provision :shell, :path => File.join("./varying-vagrant-vagrants_.-10up/provision","provision.sh" )
+    client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/database/", "/srv/database"
+    client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/database/data/", "/var/lib/mysql", :extra => 'dmode=777,fmode=777'
+    client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/config/", "/srv/config"
+    client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/config/nginx-config/sites/", "/etc/nginx/custom-sites"
+    client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/www/", "/srv/www/", :owner => "www-data"
   end
 end
 
