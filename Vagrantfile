@@ -36,18 +36,35 @@ Vagrant.configure("1") do |config|
       end
     end
   end
+end  
 
+Vagrant.configure("2") do |config|
+
+  config.vm.provider :virtualbox do |v|
+    v.customize ["modifyvm", :id, "--memory", 512]
+  end
 
   config.vm.define :client3 do |client_config|
-    client_config.vm.box = 'timhuegdon.com_.-vagrant-boxes_.-ubuntu-11.10.box'
-    client_config.vm.box_url = 'http://timhuegdon.com/vagrant-boxes/ubuntu-11.10.box'
+    client_config.vm.box = "std-precise32"
+    client_config.vm.box_url = "http://files.vagrantup.com/precise32.box"
+#    client_config.vm.box = 'timhuegdon.com_.-vagrant-boxes_.-ubuntu-11.10.box'
+#    client_config.vm.box_url = 'http://timhuegdon.com/vagrant-boxes/ubuntu-11.10.box'
 #    client_config.vm.box_url = 'http://files.vagrantup.com/lucid32.box'
-    client_config.vm.host_name = "client3.#{domain}"
+
+
+    client_config.vm.hostname = "client3.#{domain}"
 #    client_config.vm.network :bridged
-    client_config.vm.network :hostonly, '172.16.32.13'
-    client_config.vm.provision :shell, :path => "apt-get_update.sh"
+#    client_config.vm.network :hostonly, '172.16.32.13'
+    client_config.vm.provision :shell, :path => File.join(".","provision.sh" )
+    client_config.vm.synced_folder "database/", "/srv/database"
+    client_config.vm.synced_folder "database/data/", "/var/lib/mysql", :extra => 'dmode=777,fmode=777'
+    client_config.vm.synced_folder "config/", "/srv/config"
+    client_config.vm.synced_folder "config/nginx-config/sites/", "/etc/nginx/custom-sites"
+    client_config.vm.synced_folder "www/", "/srv/www/", :owner => "www-data"
   end
-  
+end
+
+Vagrant.configure("1") do |config|  
   config.vm.define :rails_master do |rails_master_config|
     rails_master_config.vm.box       = 'precise32_2013_02'
     rails_master_config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
