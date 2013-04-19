@@ -28,7 +28,8 @@ Vagrant.configure("2") do |config|
         v.customize [
           'modifyvm', :id,
           '--name', node[:hostname],
-          '--memory', memory.to_s
+          '--memory', memory.to_s,
+          '--nic2', "intnet"    
         ]
       end 
       node_config.vm.provision :puppet do |puppet|
