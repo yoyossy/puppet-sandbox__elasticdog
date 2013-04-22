@@ -56,7 +56,7 @@ Vagrant.configure("2") do |config|
 
     client_config.vm.hostname = "client3.#{domain}"
 #    client_config.vm.network :bridged
-#    client_config.vm.network :hostonly, '192.168.10.13'
+    client_config.vm.network :hostonly, '192.168.10.13'
     client_config.vm.provision :shell, :path => File.join("./varying-vagrant-vagrants_.-10up/provision","provision.sh" )
     client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/database/", "/srv/database"
     client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/database/data/", "/var/lib/mysql", :extra => 'dmode=777,fmode=777'
