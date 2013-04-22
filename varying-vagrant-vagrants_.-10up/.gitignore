@@ -16,6 +16,7 @@ config/apt_update_run
 
 # No need to share our mysql data with each other
 database/data/*
+!database/data/readme.txt
 
 # No need to share our individual sites with each other
 www/*
