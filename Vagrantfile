@@ -4,9 +4,9 @@
 domain = 'example.com'
 
 puppet_nodes = [
-  {:hostname => 'puppet',  :ip => '172.16.32.10', :box => 'precise64_begolu_2013_02', :fwdhost => 8140, :fwdguest => 8140, :ram => 512},
-  {:hostname => 'client1', :ip => '172.16.32.11', :box => 'precise64_begolu_2013_02'},
-  {:hostname => 'client2', :ip => '172.16.32.12', :box => 'precise64_begolu_2013_02'},
+  {:hostname => 'puppet',  :ip => '192.168.10.10', :box => 'precise64_begolu_2013_02', :fwdhost => 8140, :fwdguest => 8140, :ram => 512},
+  {:hostname => 'client1', :ip => '192.168.10.11', :box => 'precise64_begolu_2013_02'},
+  {:hostname => 'client2', :ip => '192.168.10.12', :box => 'precise64_begolu_2013_02'},
 ]
 
 Vagrant.configure("2") do |config|
@@ -29,7 +29,7 @@ Vagrant.configure("2") do |config|
           'modifyvm', :id,
           '--name', node[:hostname],
           '--memory', memory.to_s,
-          '--nic2', "intnet"    
+#          '--nic2', "intnet"    
         ]
       end 
       node_config.vm.provision :puppet do |puppet|
@@ -56,7 +56,7 @@ Vagrant.configure("2") do |config|
 
     client_config.vm.hostname = "client3.#{domain}"
 #    client_config.vm.network :bridged
-#    client_config.vm.network :hostonly, '172.16.32.13'
+#    client_config.vm.network :hostonly, '192.168.10.13'
     client_config.vm.provision :shell, :path => File.join("./varying-vagrant-vagrants_.-10up/provision","provision.sh" )
     client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/database/", "/srv/database"
     client_config.vm.synced_folder "varying-vagrant-vagrants_.-10up/database/data/", "/var/lib/mysql", :extra => 'dmode=777,fmode=777'
@@ -72,7 +72,7 @@ Vagrant.configure("1") do |config|
     rails_master_config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
     rails_master_config.vm.host_name = "master.#{domain}"
     rails_master_config.vm.network :bridged
-    rails_master_config.vm.network :hostonly, '172.16.32.110'
+    rails_master_config.vm.network :hostonly, '192.168.10.110'
     rails_master_config.vm.forward_port 3000, 3000
     rails_master_config.vm.customize [
         'modifyvm', :id,
@@ -90,7 +90,7 @@ Vagrant.configure("1") do |config|
     python_master_config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
     python_master_config.vm.host_name = "master.#{domain}"
     python_master_config.vm.network :bridged
-    python_master_config.vm.network :hostonly, '172.16.32.120'
+    python_master_config.vm.network :hostonly, '192.168.10.120'
     python_master_config.vm.forward_port 80, 12080
     python_master_config.vm.forward_port 8000, 8120
     python_master_config.vm.customize [
