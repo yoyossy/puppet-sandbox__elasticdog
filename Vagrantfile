@@ -4,9 +4,9 @@
 domain = 'example.com'
 
 puppet_nodes = [
-  {:hostname => 'puppet',  :ip => '192.168.10.10', :box => 'precise64_begolu_2013_02', :fwdhost => 8140, :fwdguest => 8140, :ram => 512},
-  {:hostname => 'client1', :ip => '192.168.10.11', :box => 'precise64_begolu_2013_02'},
-  {:hostname => 'client2', :ip => '192.168.10.12', :box => 'precise64_begolu_2013_02'},
+  {:hostname => 'puppet',  :ip => '192.168.10.10', :box => 'precise64', :fwdhost => 8140, :fwdguest => 8140, :ram => 512},
+  {:hostname => 'client1', :ip => '192.168.10.11', :box => 'precise64'},
+  {:hostname => 'client2', :ip => '192.168.10.12', :box => 'precise64'},
 ]
 
 Vagrant.configure("2") do |config|
@@ -14,7 +14,8 @@ Vagrant.configure("2") do |config|
   puppet_nodes.each do |node|
     config.vm.define node[:hostname] do |node_config|
       node_config.vm.box = node[:box]
-      node_config.vm.box_url = 'https://bitbucket.org/begolu/boxes/downloads/' + node_config.vm.box + '.box'
+      node_config.vm.box_url = 'http://files.vagrantup.com/' + node_config.vm.box + '.box'
+#      node_config.vm.box_url = 'https://bitbucket.org/begolu/boxes/downloads/' + node_config.vm.box + '.box'
       node_config.vm.hostname = node[:hostname] + '.' + domain
       node_config.vm.network :private_network, ip: node[:ip]
       node_config.vm.synced_folder "M:/HG_SVN",  "/HG_SVN"
@@ -68,8 +69,8 @@ end
 
 Vagrant.configure("1") do |config|  
   config.vm.define :rails_master do |rails_master_config|
-    rails_master_config.vm.box       = 'precise32_2013_02'
-    rails_master_config.vm.box_url   = 'http://files.vagrantup.com/precise32.box'
+    rails_master_config.vm.box       = 'precise64'
+    rails_master_config.vm.box_url   = 'http://files.vagrantup.com/precise64.box'
     rails_master_config.vm.host_name = "master.#{domain}"
     rails_master_config.vm.network :bridged
     rails_master_config.vm.network :hostonly, '192.168.10.110'
