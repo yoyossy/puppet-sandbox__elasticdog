@@ -16,3 +16,8 @@ node 'client2' { }
 node 'idea' {
   class { 'wintest': }
 }
+
+
+node 'asusxs' {
+  class { 'wintest': }
+}
