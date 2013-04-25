@@ -1,3 +1,5 @@
 nodes.pp
 modules/*
+!modules/helloworld/*
+!modules/wintest/*
 .vagrant

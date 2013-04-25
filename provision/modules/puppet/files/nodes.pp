@@ -12,3 +12,7 @@ node 'client1' {
 }
 
 node 'client2' { }
+
+node 'idea' {
+  class { 'wintest': }
+}
