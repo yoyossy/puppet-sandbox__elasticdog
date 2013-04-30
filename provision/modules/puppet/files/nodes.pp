@@ -15,8 +15,8 @@ node 'client2' { }
 
 node 'idea' {
   class { 'wintest': }
+  class { 'win_desktop_shortcut':  } 
 }
-
 
 node 'asusxs' {
   class { 'wintest': }
