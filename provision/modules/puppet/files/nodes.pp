@@ -21,3 +21,6 @@ node 'idea' {
 node 'asusxs' {
   class { 'wintest': }
 }
+node 'asusxsmaison' {
+  class { 'wintest': }
+}
