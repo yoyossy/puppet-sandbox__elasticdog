@@ -1,0 +1,63 @@
+{
+  "name": "simondean-net_share",
+  "version": "0.1.2",
+  "source": "https://github.com/simondean/puppet-net_share",
+  "author": "Simon Dean",
+  "license": "Apache License, Version 2.0",
+  "summary": "Windows network share module",
+  "description": "Module for configuring Windows network file shares. Uses the 'net share' command. ",
+  "project_page": "https://github.com/simondean/puppet-net_share",
+  "dependencies": [
+
+  ],
+  "types": [
+    {
+      "name": "net_share",
+      "doc": "Windows network share",
+      "properties": [
+        {
+          "name": "ensure",
+          "doc": "The basic property that the resource should be in.  Valid values are `present`, `absent`."
+        },
+        {
+          "name": "path",
+          "doc": "File system path to be shared. Will be auto-required. "
+        },
+        {
+          "name": "remark",
+          "doc": "Comments stored against the share. "
+        },
+        {
+          "name": "maximumusers",
+          "doc": "Maximum number of users that can concurrently access the share. Valid values are 'unlimited' or a number.   Valid values are `unlimited`.  Values can match `/^[1-9][0-9]*$/`."
+        },
+        {
+          "name": "cache",
+          "doc": "Caching.   Valid values are `manual`, `documents`, `programs`, `branchcache`, `none`."
+        },
+        {
+          "name": "permissions",
+          "doc": "An array of permissions. Example: ['computer\\user,full', 'computer\\user2,change', 'computer\\user3,read']"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "Network share name. "
+        }
+      ],
+      "providers": [
+        {
+          "name": "net_share",
+          "doc": "Windows network share\n\nRequired binaries: `c:/windows/system32/net.exe`.  Default for `operatingsystem` == `windows`."
+        }
+      ]
+    }
+  ],
+  "checksums": {
+    "Modulefile": "defd02f57b53892eed1cfaf3fd77aefc",
+    "lib/puppet/provider/net_share/net_share.rb": "949c92db1c1de6b56f0ac5f8582cca5e",
+    "lib/puppet/type/net_share.rb": "7c5d6324f3d87d64515a0f7d4d31bbce",
+    "tests/net_share.pp": "c8f0b679a8c2cd54bad6d930ce3c3924"
+  }
+}

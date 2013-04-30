@@ -14,10 +14,10 @@ node 'client1' {
 node 'client2' { }
 
 node 'idea' {
-  class { 'wintest': }
-  class { 'win_desktop_shortcut':  } 
+ class { 'net_share':  }
+ class { 'wintest': }
+ class { 'win_desktop_shortcut': }
 }
-
 node 'asusxs' {
   class { 'wintest': }
 }
