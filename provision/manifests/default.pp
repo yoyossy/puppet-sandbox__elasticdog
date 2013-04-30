@@ -13,3 +13,4 @@ class { 'networking': }
 if $hostname == 'puppet' {
   class { 'puppet::server': }
 }
+
