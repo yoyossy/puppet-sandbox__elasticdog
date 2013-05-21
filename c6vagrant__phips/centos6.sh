@@ -25,3 +25,5 @@ echo "done"
 echo -n "Installing puppet..."
 yum install -y puppet >/dev/null 2>&1
 echo "done"
+
+
