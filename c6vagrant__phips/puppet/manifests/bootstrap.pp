@@ -8,7 +8,10 @@ Exec        { path => '/usr/sbin:/sbin:/bin:/usr/bin' }
 Sshd_config { notify => Service[ 'sshd' ] }
 User        { managehome => true }
 
-$packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear' ]
+$packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear',
+              'xorg-x11-xauth',
+              'emacs',
+              'gstreamer','gstreamer-plugins-good'  ]
 
 package { $packages:
     ensure => installed,
