@@ -10,7 +10,10 @@ User        { managehome => true }
 
 $packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear',
               'xorg-x11-xauth',
+              'xorg-x11-fonts-misc',
+              'xorg-x11-fonts-Type1',  
               'emacs',
+              'vim-X11',
               'gstreamer','gstreamer-plugins-good'  ]
 
 package { $packages:
