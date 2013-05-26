@@ -4,6 +4,7 @@ include augeasproviders
 include sysctl
 include java
 include jenkins
+include users-core
 
 # defaults
 Exec        { path => '/usr/sbin:/sbin:/bin:/usr/bin' }
@@ -48,14 +49,22 @@ firewall {
 # this is needed to make outbound connections work, such as database connection
       state => ['RELATED','ESTABLISHED'],
       action => 'accept';
+
     '100 accept inbound http requests' :
       proto => 'tcp',
       port => 80,
       action => 'accept';
+
     '101 accept inbound https requests' :
       proto => 'tcp',
       port => 443,
       action => 'accept';
+
+    '102 accept inbound jenkins requests' :
+      proto => 'tcp',
+      port => 8080,
+      action => 'accept';
+
 
   }
 
