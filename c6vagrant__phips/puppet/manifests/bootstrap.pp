@@ -2,6 +2,8 @@
 
 include augeasproviders
 include sysctl
+include java
+include jenkins
 
 # defaults
 Exec        { path => '/usr/sbin:/sbin:/bin:/usr/bin' }
@@ -12,7 +14,7 @@ $packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear',
               'xorg-x11-xauth',
               'xorg-x11-fonts-misc',
               'xorg-x11-fonts-Type1',  
- #             'emacs',
+ 
               'vim-X11',
               'gstreamer','gstreamer-plugins-good'  ]
 
@@ -68,6 +70,7 @@ service { 'httpd':
     require => Package[ [ 'httpd', 'php' ] ],
 }
 
+
 # sshd config
 #
 sshd_config { 'LoginGraceTime':
@@ -115,3 +118,8 @@ file { '/etc/sysconfig/httpd':
     require => Package[ 'httpd' ],
 }
 
+# exec {
+#    "some-exec" :
+#        require => Class["jenkins::package"],
+#        command => "echo JENKINS"
+# }
