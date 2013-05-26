@@ -12,7 +12,7 @@ $packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear',
               'xorg-x11-xauth',
               'xorg-x11-fonts-misc',
               'xorg-x11-fonts-Type1',  
-              'emacs',
+ #             'emacs',
               'vim-X11',
               'gstreamer','gstreamer-plugins-good'  ]
 
@@ -25,6 +25,37 @@ file { '/etc/profile.d/aliases.sh':
     source => 'puppet:///modules/configs/aliases.sh',
     tag    => 'setup',
 }
+
+firewall {
+    '000 accept all icmp requests' :
+      proto => 'icmp',
+      action => 'accept';
+
+    '001 accept inbound ssh requests' :
+      proto => 'tcp',
+      port => 22,
+      action => 'accept';
+
+
+    '002 accept local traffic' :
+# traffic within localhost is OK
+      iniface => 'lo',
+      action => 'accept';
+
+    '003 allow established connections':
+# this is needed to make outbound connections work, such as database connection
+      state => ['RELATED','ESTABLISHED'],
+      action => 'accept';
+    '100 accept inbound http requests' :
+      proto => 'tcp',
+      port => 80,
+      action => 'accept';
+    '101 accept inbound https requests' :
+      proto => 'tcp',
+      port => 443,
+      action => 'accept';
+
+  }
 
 service { 'sshd':
     ensure => 'running',

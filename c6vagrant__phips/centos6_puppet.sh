@@ -4,6 +4,15 @@
 
 set -e
 
+# When this option is on, if a simple command fails 
+# for any of the reasons listed in Consequences of Shell Errors 
+# or returns an exit status value >0, and is not part of the compound list 
+# following a while, until, or if keyword, and is not a part of an AND or OR list, 
+# and is not a pipeline preceded by the ! reserved word, then the shell shall immediately exit.
+
+#  Starting shell scripts with set -e is considered a best practice, 
+#  since it is usually safer to abort the script if some error occurs. 
+
 REPO_URL="https://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm"
 
 if [ "$EUID" -ne "0" ]; then
