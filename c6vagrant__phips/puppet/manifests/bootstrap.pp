@@ -154,14 +154,3 @@ class { "python::venv":
 python::venv::isolate { "/usr/local/venv/example1": 
 requirements => "/vagrant/example1/requirements.txt",
 }
-class { "python::gunicorn": 
-  owner => "vagrant", 
-#  group => "www-mgr" 
-  }
-
-  python::gunicorn::instance { "example1":
-  venv => "/usr/local/venv/example1",
-  src => "/vagrant/example1",
-  wsgi_module => "example1:app",
-#  django => true,
-}
