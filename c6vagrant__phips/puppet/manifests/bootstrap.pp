@@ -14,9 +14,8 @@ User        { managehome => true }
 $packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear',
               'xorg-x11-xauth',
               'xorg-x11-fonts-misc',
-              'xorg-x11-fonts-Type1',  
- 
-              'vim-X11',
+              'xorg-x11-fonts-Type1',   
+              'vim-X11','git',
               'gstreamer','gstreamer-plugins-good'  ]
 
 package { $packages:
@@ -65,6 +64,15 @@ firewall {
       port => 8080,
       action => 'accept';
 
+    '103 accept inbound gunicorn requests' :
+      proto => 'tcp',
+      port => 8000,
+      action => 'accept';
+
+    '104 accept inbound flask requests' :
+      proto => 'tcp',
+      port => 5000,
+      action => 'accept';
 
   }
 
@@ -132,3 +140,28 @@ file { '/etc/sysconfig/httpd':
 #        require => Class["jenkins::package"],
 #        command => "echo JENKINS"
 # }
+
+class { "python::dev":
+      #    version => "26" 
+      }
+
+class { "python::venv": 
+  owner => "vagrant", 
+#  group => "www-mgr" 
+#    version => "26" 
+  }
+
+python::venv::isolate { "/usr/local/venv/example1": 
+requirements => "/vagrant/example1/requirements.txt",
+}
+class { "python::gunicorn": 
+  owner => "vagrant", 
+#  group => "www-mgr" 
+  }
+
+  python::gunicorn::instance { "example1":
+  venv => "/usr/local/venv/example1",
+  src => "/vagrant/example1",
+  wsgi_module => "example1:app",
+#  django => true,
+}
