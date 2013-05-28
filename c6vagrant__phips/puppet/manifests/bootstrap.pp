@@ -11,6 +11,38 @@ Exec        { path => '/usr/sbin:/sbin:/bin:/usr/bin' }
 Sshd_config { notify => Service[ 'sshd' ] }
 User        { managehome => true }
 
+# http://augeasproviders.com/documentation/examples.html#sysctl_provider
+sysctl { "net.ipv4.ip_forward":
+  ensure  => present,
+  value   => "1",
+  comment => "test",
+}
+
+# add a server instance
+  openvpn::server { 'winterthur':
+    country      => "CH",
+    province     => "ZH",
+    city         => "Winterthur",
+    organization => "example.org",
+    email        => "root@example.org",
+    server       => '10.200.200.0 255.255.255.0'
+  }
+
+  # define clients
+  openvpn::client { 'client1':
+    server => 'winterthur'
+  }
+  openvpn::client { 'client2':
+    server   => 'winterthur'
+  }
+
+  openvpn::client_specific_config { 'client1':
+    server => 'winterthur',
+    ifconfig => '10.200.200.50 255.255.255.0'
+  }
+
+
+
 $packages = [ 'httpd', 'mysql-server', 'php', 'php-mysql', 'php-pear',
               'xorg-x11-xauth',
               'xorg-x11-fonts-misc',
@@ -154,3 +186,14 @@ class { "python::venv":
 python::venv::isolate { "/usr/local/venv/example1": 
 requirements => "/vagrant/example1/requirements.txt",
 }
+
+jenkins::plugin {
+#   "shiningpanda" : ;
+#   "git" :  version => "1.4.0" ;
+#   "swarm" : ;
+  "subversion" : ;
+#   "ldap" : ;
+#   "pam-auth" : ;
+}
+
+

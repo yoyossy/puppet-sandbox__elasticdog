@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+def server_config(config)
+  config.vm.provision :puppet, :module_path => '..' do |puppet|
+    puppet.manifests_path = "vagrant"
+    puppet.manifest_file  = "server.pp"
+  end
+end
+
+def client_config(config)
+  config.vm.provision :puppet, :module_path => '..' do |puppet|
+    puppet.manifests_path = "vagrant"
+    puppet.manifest_file  = "client.pp"
+  end
+end
+
+Vagrant::Config.run do |config|
+
+  config.vm.define :server_ubuntu do |c|
+    c.vm.box = 'precise64'
+    server_config c
+    c.vm.network :hostonly, '10.255.255.10'
+  end
+
+  config.vm.define :server_centos do |c|
+    c.vm.box = 'centos63'
+    c.vm.box_url = "https://github.com/downloads/Sedimap-pt/sedimap-centos63-x86_64-box/sedimap-centos63-x86_64-base.box"
+    c.vm.provision :shell, :inline => 'yum install -y wget'
+#    c.vm.provision :shell, :inline => 'wget https://github.com/downloads/OpenVPN/easy-rsa/easy-rsa-2.2.0_master.tar.gz -P/vagrant '
+#    c.vm.provision :shell, :inline => 'tar -zxvf /vagrant/easy-rsa-2.2.0_master.tar.gz'
+    c.vm.provision :shell, :inline => 'if [ ! -d /usr/share/doc/openvpn-2.2.2 ]; then mkdir /usr/share/doc/openvpn-2.2.2; fi'
+    c.vm.provision :shell, :inline => 'cp -R /vagrant/easy-rsa-2.2.0_master/easy-rsa/ /usr/share/doc/openvpn-2.2.2/easy-rsa/'
+    c.vm.provision :shell, :inline => 'if [ ! -f rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm ]; then wget -q http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm; fi'
+    c.vm.provision :shell, :inline => 'yum install -y rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm || exit 0'
+
+    server_config c
+    c.vm.network :hostonly, '10.255.255.11'
+  end
+
+  config.vm.define :client_ubuntu do |c|
+    c.vm.box = 'precise64'
+    client_config c
+    c.vm.network :hostonly, '10.255.255.20'
+  end
+
+end

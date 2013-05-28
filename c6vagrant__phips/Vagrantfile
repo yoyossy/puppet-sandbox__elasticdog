@@ -52,15 +52,25 @@ Vagrant.configure("2") do |config|
 
   # first, get puppet on there
   config.vm.provision :shell, :path => "centos6_puppet.sh"
-  # second, get openvp on there
+  # second, get openvp on there 
   config.vm.provision :shell, :path => "centos6_openvpn.sh"
+#   c.vm.provision :shell, :inline => 'yum install -y wget'
+#    c.vm.provision :shell, :inline => 'wget https://github.com/downloads/OpenVPN/easy-rsa/easy-rsa-2.2.0_master.tar.gz -P/vagrant '
+#    c.vm.provision :shell, :inline => 'tar -zxvf /vagrant/easy-rsa-2.2.0_master.tar.gz'
+  config.vm.provision :shell, :inline => 'if [ ! -d /usr/share/doc/openvpn-2.2.2 ]; then mkdir /usr/share/doc/openvpn-2.2.2; fi'
+  config.vm.provision :shell, :inline => 'if [ ! -d /usr/share/openvpn ]; then mkdir /usr/share/openvpn; fi'
+  config.vm.provision :shell, :inline => 'cp -R /vagrant/easy-rsa-2.2.0_master/easy-rsa/ /usr/share/doc/openvpn-2.2.2/easy-rsa/'
+  config.vm.provision :shell, :inline => 'cp -R /vagrant/easy-rsa-2.2.0_master/easy-rsa/ /usr/share/openvpn/easy-rsa/'
+#    c.vm.provision :shell, :inline => 'if [ ! -f rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm ]; then wget -q http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm; fi'
+#    c.vm.provision :shell, :inline => 'yum install -y rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm || exit 0'
+
 
   # then hand over to puppet to do the rest
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "puppet/manifests"
     puppet.manifest_file  = "bootstrap.pp"
     puppet.module_path    = "puppet/modules"
-    puppet.options        = "--hiera_config /vagrant/hiera.yaml --verbose --debug"
+    puppet.options        = "--hiera_config /vagrant/hiera.yaml --debug"
 #    puppet.options        = "--hiera_config /vagrant/hiera.yaml --verbose "
   end
 end
