@@ -4,9 +4,9 @@
 domain = 'example.com'
 
 puppet_nodes = [
-  {:hostname => 'puppet',  :ip => '192.168.10.10', :box => 'precise64', :fwdhost => 8140, :fwdguest => 8140, :ram => 512},
-  {:hostname => 'client1', :ip => '192.168.10.11', :box => 'precise64'},
-  {:hostname => 'client2', :ip => '192.168.10.12', :box => 'precise64'},
+  {:hostname => 'puppet',  :ip => '192.168.10.10', :box => 'centos64_x64', :fwdhost => 8140, :fwdguest => 8140, :ram => 512},
+  {:hostname => 'client1', :ip => '192.168.10.11', :box => 'centos64_x64'},
+  {:hostname => 'client2', :ip => '192.168.10.12', :box => 'centos64_x64'},
 ]
 
 Vagrant.configure("2") do |config|
@@ -23,7 +23,11 @@ Vagrant.configure("2") do |config|
       if node[:fwdhost]
         node_config.vm.network :forwarded_port, guest: (node[:fwdguest]), host: (node[:fwdhost])
       end
+     if node[:box]=='centos64_x64'
+#        node_config.vm.provision :shell, :inline => 'if [ ! -f rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm ]; then wget -q http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm; fi'
+        node_config.vm.provision :shell, :inline => 'if [ ! -f puppetlabs-release-6-7.noarch.rpm ]; then wget -q https://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm; fi'
 
+      end
       memory = node[:ram] ? node[:ram] : 256;
       node_config.vm.provider :virtualbox do |v|
         v.customize [
