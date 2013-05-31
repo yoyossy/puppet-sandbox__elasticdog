@@ -10,6 +10,14 @@ class { 'vagrant': stage => 'pre' }
 class { 'puppet': }
 class { 'networking': }
 ################################
+if $::is_vagrant {
+    $data_center = 'vagrant'
+} else {
+    $data_center = 'amazon'
+}
+
+include role::ui
+#############################
 if $hostname == 'puppet' {
 
   class { 'puppet::server': }
@@ -64,9 +72,9 @@ if $hostname == 'puppet' {
 # https://forge.puppetlabs.com/razorsedge/network
 network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.218',
+  ipaddress    => '192.168.0.218',
   netmask      => '255.255.255.0',
-  gateway      => '10.53.213.254',
+  gateway      => '192.168.0.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
 #  mtu          => '1500',
 #  ethtool_opts => 'speed 1000 duplex full autoneg off',
