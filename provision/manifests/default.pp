@@ -60,6 +60,16 @@ if $hostname == 'puppet' {
       proto => 'tcp',
       port => 8140,
       action => 'accept';
-
   }
+# https://forge.puppetlabs.com/razorsedge/network
+network::if::static { 'eth2':
+  ensure       => 'up',
+  ipaddress    => '10.53.213.218',
+  netmask      => '255.255.255.0',
+  gateway      => '10.53.213.254',
+#  macaddress   => '08:00:27:FC:7E:E0',
+#  mtu          => '1500',
+#  ethtool_opts => 'speed 1000 duplex full autoneg off',
+}
+
 }
