@@ -1,0 +1,20 @@
+<?php
+# vim: ft=php
+#
+# Configure phpsh codebase modes
+#
+#   'phpsh' (no args) -> MediaWiki codebase
+#   'phpsh -c none'   -> Vanilla PHP
+#
+# This file is managed by Puppet.
+#
+switch ($___phpsh___codebase_mode) {
+case '':
+	// MediaWiki codebase mode
+	chdir( '<%= scope.lookupvar("mediawiki::dir") %>' );
+	include_once( '<%= scope.lookupvar("mediawiki::dir") %>/index.php' );
+	break;
+case 'none':
+	// Vanilla PHP
+	break;
+}

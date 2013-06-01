@@ -1,0 +1,5 @@
+.vagrant
+/Vagrantfile-extra.rb
+/LocalSettings.php
+tags
+/mediawiki/
