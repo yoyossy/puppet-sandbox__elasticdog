@@ -20,6 +20,19 @@ include role::ui
 #############################
 if $hostname == 'puppet' {
 
+mrepo::repo { 'centos6-x86_64':
+    ensure    => present,
+    update    => 'weekly',
+    repotitle => 'CentOS 6 64 bit',
+    arch      => 'x86_64',
+    release   => '6',
+    iso       => 'CentOS-6.3-x86_64-bin-DVD1.iso',
+    urls      => {
+      updates => 'rsync://mirrors.kernel.org/centos/6/updates/x86_64',
+      base    => 'rsync://mirrors.kernel.org/centos/6/os/x86_64',
+      extras  => 'rsync://mirrors.kernel.org/centos/6/extras/x86_64',
+    }
+  }
   class { 'puppet::server': }
 
   # http://augeasproviders.com/documentation/examples.html#sysctl_provider
