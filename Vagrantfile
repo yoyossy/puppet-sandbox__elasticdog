@@ -29,6 +29,11 @@ Vagrant.configure("2") do |config|
 
      if node[:box]=='centos64_x64'
         node_config.vm.provision :shell, :inline => 'if [ ! -f puppetlabs-release-6-7.noarch.rpm ]; then wget -q https://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm; fi'
+        node_config.vm.provision :shell, :inline => 'if [ ! -f rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm ]; then wget -q http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm; fi'
+        node_config.vm.provision :shell, :inline => 'rpm -ivh --replacepkgs rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm'
+        node_config.vm.provision :shell, :inline => 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag'
+        node_config.vm.provision :shell, :inline => 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-fabian'
+#        node_config.vm.provision :shell, :inline => 'rpm -ivh --replacepkgs http://pkgs.repoforge.org/mrepo/mrepo-0.8.8-0.pre1.el6.rft.noarch.rpm'
         node_config.vm.provision :shell, :inline => 'iptables --list-rules'
       end
       memory = node[:ram] ? node[:ram] : 256;
@@ -48,6 +53,22 @@ Vagrant.configure("2") do |config|
             "is_vagrant" => true,
           }
         end
+        if node[:hostname]=='client1'
+          puppet.options = "--hiera_config hiera.yaml"
+          puppet.facter = {
+            ## tells default.pp that we're running in Vagrant
+            "is_vagrant" => true,
+          }
+        end
+        if node[:hostname]=='client2'
+          puppet.options = "--hiera_config hiera.yaml"
+          puppet.facter = {
+            ## tells default.pp that we're running in Vagrant
+            "is_vagrant" => true,
+          }
+        end
+        
+
         puppet.manifests_path = 'provision/manifests'
         puppet.module_path = 'provision/modules'
       end

@@ -9,9 +9,25 @@ node 'puppet' { }
 
 node 'client1' {
   class { 'helloworld': }
+
+package { ['lftp', 'createrepo','rsync','pyOpenSSL',
+# 'rhn-client-tools',
+'mrepo'
+]:
+    ensure  => present,
+  }
+
 }
 
-node 'client2' { }
+node 'client2' { 
+  class { 'helloworld': }
+package { ['lftp', 'createrepo','rsync','pyOpenSSL',
+# 'rhn-client-tools',
+'mrepo'
+]:
+    ensure  => present,
+  }
+}
 
 node 'idea' {
  class { 'net_share':  }
