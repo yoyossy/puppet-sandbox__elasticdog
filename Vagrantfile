@@ -18,24 +18,8 @@ Vagrant.configure("2") do |config|
 #      node_config.vm.box_url = 'https://bitbucket.org/begolu/boxes/downloads/' + node_config.vm.box + '.box'
       node_config.vm.hostname = node[:hostname] + '.' + domain
       node_config.vm.network :private_network, ip: node[:ip]
+      node_config.vm.network :public_network
       node_config.vm.synced_folder "M:/HG_SVN",  "/HG_SVN"
-
-      if node[:fwdhost]
-        node_config.vm.network :forwarded_port, guest: (node[:fwdguest]), host: (node[:fwdhost])
-      end
-      if node[:hostname]=='puppet'
-        node_config.vm.network :public_network
-      end
-
-     if node[:box]=='centos64_x64'
-        node_config.vm.provision :shell, :inline => 'if [ ! -f puppetlabs-release-6-7.noarch.rpm ]; then wget -q https://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm; fi'
-        node_config.vm.provision :shell, :inline => 'if [ ! -f rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm ]; then wget -q http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm; fi'
-        node_config.vm.provision :shell, :inline => 'rpm -ivh --replacepkgs rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm'
-        node_config.vm.provision :shell, :inline => 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag'
-        node_config.vm.provision :shell, :inline => 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-fabian'
-#        node_config.vm.provision :shell, :inline => 'rpm -ivh --replacepkgs http://pkgs.repoforge.org/mrepo/mrepo-0.8.8-0.pre1.el6.rft.noarch.rpm'
-        node_config.vm.provision :shell, :inline => 'iptables --list-rules'
-      end
       memory = node[:ram] ? node[:ram] : 256;
       node_config.vm.provider :virtualbox do |v|
         v.customize [
@@ -45,6 +29,21 @@ Vagrant.configure("2") do |config|
 #          '--nic2', "intnet"    
         ]
       end 
+
+      if node[:fwdhost]
+        node_config.vm.network :forwarded_port, guest: (node[:fwdguest]), host: (node[:fwdhost])
+      end
+      
+      if node[:box]=='centos64_x64'
+        node_config.vm.provision :shell, :inline => 'if [ ! -f puppetlabs-release-6-7.noarch.rpm ]; then wget -q https://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm; fi'
+        node_config.vm.provision :shell, :inline => 'if [ ! -f rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm ]; then wget -q http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm; fi'
+        node_config.vm.provision :shell, :inline => 'rpm -ivh --replacepkgs rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm'
+        node_config.vm.provision :shell, :inline => 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag'
+        node_config.vm.provision :shell, :inline => 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-fabian'
+#        node_config.vm.provision :shell, :inline => 'rpm -ivh --replacepkgs http://pkgs.repoforge.org/mrepo/mrepo-0.8.8-0.pre1.el6.rft.noarch.rpm'
+        node_config.vm.provision :shell, :inline => 'iptables --list-rules'
+      end
+      
       node_config.vm.provision :puppet do |puppet|
         if node[:hostname]=='puppet'
           puppet.options = "--hiera_config hiera.yaml"

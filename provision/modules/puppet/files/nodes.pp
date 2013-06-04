@@ -3,6 +3,7 @@
 #
 
 # self-manage the puppet master server
+
 node 'puppet' { }
 
 ##### CLIENTS
@@ -26,7 +27,7 @@ package { ['lftp', 'createrepo','rsync','pyOpenSSL',
   }
 
 }
-
+##############################################
 node 'client2' { 
   class { 'helloworld': }
 network::if::static { 'eth2':
@@ -38,6 +39,7 @@ network::if::static { 'eth2':
 #  mtu          => '1500',
 #  ethtool_opts => 'speed 1000 duplex full autoneg off',
 }
+
 package { ['lftp', 'createrepo','rsync','pyOpenSSL',
 # 'rhn-client-tools',
 'mrepo'
@@ -45,7 +47,7 @@ package { ['lftp', 'createrepo','rsync','pyOpenSSL',
     ensure  => present,
   }
 }
-
+##########################################
 node 'idea' {
  class { 'net_share':  }
  class { 'wintest': }
@@ -54,12 +56,15 @@ node 'idea' {
 node 'asusxs' {
   class { 'wintest': }
 }
+##########################################
 node 'asusxsmaison' {
   class { 'wintest': }
 }
+##########################################
 node 'vento' {
   class { 'helloworld': }
-#  class { 'networking': }
+  class { 'networking': }
+
   network::if::static { 'eth2':
   ensure       => 'up',
   ipaddress    => '10.53.213.110',
