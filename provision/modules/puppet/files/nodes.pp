@@ -12,7 +12,7 @@ node 'client1' {
   class { 'helloworld': }
 network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.219',
+  ipaddress    => '10.53.213.011',
   netmask      => '255.255.255.0',
 #  gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
@@ -32,7 +32,7 @@ node 'client2' {
   class { 'helloworld': }
 network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.220',
+  ipaddress    => '10.53.213.012 ',
   netmask      => '255.255.255.0',
 #  gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
@@ -67,7 +67,7 @@ node 'vento' {
 
   network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.110',
+  ipaddress    => '10.53.213.010',
   netmask      => '255.255.255.0',
   gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',

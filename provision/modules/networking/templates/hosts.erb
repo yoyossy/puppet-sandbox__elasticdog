@@ -1,13 +1,21 @@
 127.0.0.1       localhost
 127.0.1.1       <%= @fqdn %>
 
+## VAGRANTBOXes
 192.168.10.10   puppet.<%= @domain %> puppet
 192.168.10.11   client1.<%= @domain %> client1
 192.168.10.12   client2.<%= @domain %> client2
+
+##  SSY réels
 10.53.213.3     idea.<%= @domain %>  idea
-10.53.213.234   asusxs.<%= @domain %>  asusxs
+10.53.213.134   asusxs.<%= @domain %>  asusxs
+10.53.213.110   vento.<%= @domain %>  vento
+
+##  VIRTUALBOXes
+10.53.213.210   centos64vb.<%= @domain %>   centos64vb
+
+######    maison
 192.168.0.29    asusxsmaison.<%= @domain %>  asusxsmaison
-10.53.213.210   vento.<%= @domain %>  vento
 
 # The following lines are desirable for IPv6 capable hosts
 # ::1     localhost ip6-localhost ip6-loopback

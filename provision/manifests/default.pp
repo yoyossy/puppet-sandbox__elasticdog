@@ -72,7 +72,7 @@ if $hostname == 'puppet' {
 # https://forge.puppetlabs.com/razorsedge/network
 network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.218',
+  ipaddress    => '10.53.213.010',
   netmask      => '255.255.255.0',
   gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
