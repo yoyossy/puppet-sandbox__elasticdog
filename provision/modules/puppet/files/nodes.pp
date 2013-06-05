@@ -12,7 +12,7 @@ node 'client1' {
   class { 'helloworld': }
 network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.011',
+  ipaddress    => '10.53.213.11',
   netmask      => '255.255.255.0',
 #  gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
@@ -32,7 +32,7 @@ node 'client2' {
   class { 'helloworld': }
 network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.012 ',
+  ipaddress    => '10.53.213.12',
   netmask      => '255.255.255.0',
 #  gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
@@ -65,9 +65,39 @@ node 'vento' {
   class { 'helloworld': }
   class { 'networking': }
 
+  network::if::static { 'eth1':
+  ensure       => 'up',
+  ipaddress    => '192.168.0.110',
+  netmask      => '255.255.255.0',
+  gateway      => '192.168.0.254',
+#  macaddress   => '08:00:27:FC:7E:E0',
+#  mtu          => '1500',
+#  ethtool_opts => 'speed 1000 duplex full autoneg off',
+}
   network::if::static { 'eth2':
   ensure       => 'up',
-  ipaddress    => '10.53.213.010',
+  ipaddress    => '10.53.213.110',
+  netmask      => '255.255.255.0',
+#  gateway      => '10.53.213.254',
+#  macaddress   => '08:00:27:FC:7E:E0',
+#  mtu          => '1500',
+#  ethtool_opts => 'speed 1000 duplex full autoneg off',
+}
+
+sysctl { "net.ipv4.ip_forward":
+    ensure  => present,
+    value   => "1",
+    comment => "net.ipv4.ip_forward 1",
+  }
+}
+##################################
+node 'centos64vb' {
+  class { 'helloworld': }
+  class { 'networking': }
+
+  network::if::static { 'eth2':
+  ensure       => 'up',
+  ipaddress    => '10.53.213.210',
   netmask      => '255.255.255.0',
   gateway      => '10.53.213.254',
 #  macaddress   => '08:00:27:FC:7E:E0',
@@ -80,5 +110,8 @@ sysctl { "net.ipv4.ip_forward":
     value   => "1",
     comment => "net.ipv4.ip_forward 1",
   }
+
+
+
 
   }
