@@ -18,8 +18,14 @@ Vagrant.configure("2") do |config|
 #      node_config.vm.box_url = 'https://bitbucket.org/begolu/boxes/downloads/' + node_config.vm.box + '.box'
       node_config.vm.hostname = node[:hostname] + '.' + domain
       node_config.vm.network :private_network, ip: node[:ip]
+      #########################################################
+      ##   Attention - il faut un serveur DHCP quelque part !
       node_config.vm.network :public_network
+      #########################################################
+      node_config.vm.synced_folder "M:/ESPs",  "/ESPs"
+      node_config.vm.synced_folder "M:/BINs",  "/BINs"
       node_config.vm.synced_folder "M:/HG_SVN",  "/HG_SVN"
+      node_config.vm.synced_folder "M:/MMs",  "/MMs"
       memory = node[:ram] ? node[:ram] : 256;
       node_config.vm.provider :virtualbox do |v|
         v.customize [
