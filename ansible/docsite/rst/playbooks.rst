@@ -1,6 +1,11 @@
 Playbooks
 =========
 
+.. image:: http://ansible.cc/docs/_static/ansible_fest_2013.png
+   :alt: ansiblefest 2013
+   :target: http://ansibleworks.com/fest
+
+
 .. contents::
    :depth: 2
    :backlinks: top
@@ -26,6 +31,9 @@ remote systems are in spec.
 Let's dive in and see how they work.  As you go, you may wish to open
 the `github examples directory <https://github.com/ansible/ansible/tree/devel/examples/playbooks>`_ in
 another tab, so you can apply the theory to what things look like in practice.
+
+There are also some full sets of playbooks illustrating a lot of these techniques in the
+`ansible-examples repository <https://github.com/ansible/ansible-examples>`_.
 
 Playbook Language Example
 `````````````````````````
@@ -212,7 +220,15 @@ who's successful exit code is not zero, you may wish to do this::
 
    tasks:
      - name: run this command and ignore the result
-       action: shell /usr/bin/somecommand && /bin/true
+       action: shell /usr/bin/somecommand || /bin/true
+
+Or this::
+
+   tasks:
+     - name: run this command and ignore the result
+       action: shell /usr/bin/somecommand
+       ignore_errors: True
+
 
 If the action line is getting too long for comfort you can break it on
 a space and indent any continuation lines::
@@ -295,8 +311,8 @@ won't need them for much else.
    Notify handlers are always run in the order written.
 
 
-Include Files And Encouraging Reuse
-```````````````````````````````````
+Task Include Files And Encouraging Reuse
+````````````````````````````````````````
 
 Suppose you want to reuse lists of tasks between plays or playbooks.  You can use
 include files to do this.  Use of included task lists is a great way to define a role
@@ -333,6 +349,21 @@ Variables passed in can then be used in the included files.  You can reference t
 
 (In addition to the explicitly passed in parameters, all variables from
 the vars section are also available for use here as well.)
+
+Starting in 1.0, variables can also be passed to include files using an alternative syntax,
+which also supports structured variables::
+
+    tasks:
+
+      - include: wordpress.yml
+        vars:
+            user: timmy
+            some_list_variable: 
+              - alpha
+              - beta
+              - gamma
+
+Playbooks can include other playbooks too, but that's mentioned in a later section.
 
 .. note::
    As of 1.0, task include statements can be used at arbitrary depth.
@@ -399,7 +430,7 @@ Tips and Tricks
 
 Look at the bottom of the playbook execution for a summary of the nodes that were executed
 and how they performed.   General failures and fatal "unreachable" communication attempts are
-kept seperate in the counts.
+kept separate in the counts.
 
 If you ever want to see detailed output from successful modules as well as unsuccessful ones,
 use the '--verbose' flag.  This is available in Ansible 0.5 and later.

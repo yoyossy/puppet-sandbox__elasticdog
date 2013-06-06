@@ -3,6 +3,11 @@
 Inventory & Patterns
 ====================
 
+.. image:: http://ansible.cc/docs/_static/ansible_fest_2013.png
+   :alt: ansiblefest 2013
+   :target: http://ansibleworks.com/fest
+
+
 Ansible works against multiple systems in your infrastructure at the
 same time.  It does this by selecting portions of systems listed in
 Ansible's inventory file, which defaults to /etc/ansible/hosts.
@@ -57,6 +62,17 @@ In 1.0 and later, you can also do this for alphabetic ranges::
 
 For numeric patterns, leading zeros can be included or removed, as desired. Ranges are inclusive.
 
+In 1.1 and later, you can also select the connection type and user on a per host basis::
+
+   [targets]
+
+   localhost              ansible_connection=local
+   other1.example.com     ansible_connection=ssh        ansible_ssh_user=mpdehaan
+   other2.example.com     ansible_connection=ssh        ansible_ssh_user=mdehaan
+
+All of these variables can of course also be set outside of the inventory file, in 'host_vars' if you wish
+to keep your inventory file simple.
+
 Selecting Targets
 +++++++++++++++++
 
@@ -107,7 +123,7 @@ You can also use variables::
 
     webservers:!$excluded:&$required
 
-Individual host names (or IPs), but not groups, can also be referenced using
+Individual host names, IPs and groups, can also be referenced using
 wildcards::
 
     *.example.com
@@ -116,6 +132,7 @@ wildcards::
 It's also ok to mix wildcard patterns and groups at the same time::
 
     one*.com:dbservers
+
 
 Easy enough.  See :doc:`examples` and then :doc:`playbooks` for how to do things to selected hosts.
 
@@ -174,7 +191,7 @@ variables to groups.  These variables can be used by /usr/bin/ansible-playbook, 
    southeast
 
 If you need to store lists or hash data, or prefer to keep host and group specific variables
-seperate from the inventory file, see the next section.
+separate from the inventory file, see the next section.
 
 Splitting Out Host and Group Specific Data
 ++++++++++++++++++++++++++++++++++++++++++
@@ -210,8 +227,8 @@ Tip: Keeping your inventory file and variables in a git repo (or other version c
 is an excellent way to track changes to your inventory and host variables.
 
 .. versionadded:: 0.5
-   If you ever have two python interpreters on a system, set a
-   variable called 'ansible_python_interpreter' to the Python
+   If you ever have two python interpreters on a system, or your Python version 2 interpreter is not found
+   at /usr/bin/python, set an inventory variable called 'ansible_python_interpreter' to the Python
    interpreter path you would like to use.
 
 .. seealso::

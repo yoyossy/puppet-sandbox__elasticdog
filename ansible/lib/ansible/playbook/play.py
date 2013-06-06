@@ -1,4 +1,4 @@
-# (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
+# (c) 2012-2013, Michael DeHaan <michael.dehaan@gmail.com>
 #
 # This file is part of Ansible
 #
@@ -80,8 +80,11 @@ class Play(object):
 
         self._update_vars_files_for_host(None)
 
-        self._tasks      = self._load_tasks(self._ds.get('tasks', []))
-        self._handlers   = self._load_tasks(self._ds.get('handlers', []))
+        load_vars = {}
+        if self.playbook.inventory.basedir() is not None:
+            load_vars['inventory_dir'] = self.playbook.inventory.basedir();
+        self._tasks      = self._load_tasks(self._ds.get('tasks', []), load_vars)
+        self._handlers   = self._load_tasks(self._ds.get('handlers', []), load_vars)
 
         if self.tags is None:
             self.tags = []
@@ -104,6 +107,8 @@ class Play(object):
             tasks = []
 
         for x in tasks:
+            if not isinstance(x, dict):
+                raise errors.AnsibleError("expecting dict; got: %s" % x)
             task_vars = self.vars.copy()
             task_vars.update(vars)
             if 'include' in x:
@@ -200,7 +205,7 @@ class Play(object):
                 salt = var.get("salt", None)
 
                 if vname not in self.playbook.extra_vars:
-                    vars[vname] = self.playbook.callbacks.on_vars_prompt (
+                    vars[vname] = self.playbook.callbacks.on_vars_prompt(
                                      vname, private, prompt, encrypt, confirm, salt_size, salt, default
                                   )
 

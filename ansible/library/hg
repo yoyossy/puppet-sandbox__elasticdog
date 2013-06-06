@@ -57,7 +57,7 @@ options:
             - Discards uncommited changes. Runs C(hg update -C).
         required: false
         default: "yes"
-        choices: [ yes, no ]
+        choices: [ "yes", "no" ]
     purge:
         description:
             - Delets untracked files. Runs C(hg purge). Note this requires C(purge) extension to
@@ -65,7 +65,7 @@ options:
               and undo the changes before exiting the task.
         required: false
         default: "no"
-        choices: [ yes, no ]
+        choices: [ "yes", "no" ]
 notes:
     - If the task seems to be hanging, first verify remote host is in C(known_hosts).
       SSH will prompt user to authorize the first contact with a remote host. One solution is to add
@@ -204,15 +204,15 @@ def main():
             repo = dict(required=True),	    
             dest = dict(required=True),
             revision = dict(default="default"),
-            force = dict(default='yes', choices=['yes', 'no']),
-            purge = dict(default='no', choices=['yes', 'no'])
+            force = dict(default='yes', type='bool'),
+            purge = dict(default='no', type='bool')
         ),
     )
     repo = module.params['repo']
     dest = module.params['dest']
     revision = module.params['revision']
-    force = module.boolean(module.params['force'])
-    purge = module.boolean(module.params['purge'])
+    force = module.params['force']
+    purge = module.params['purge']
     hgrc = os.path.join(dest, '.hg/hgrc')
    
     # initial states

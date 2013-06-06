@@ -20,16 +20,11 @@
 
 import os
 import sys
-import yaml
-import json
-import ast
 import textwrap
 import re
 import optparse
-import time
 import datetime
 from ansible import utils
-from ansible import errors
 from ansible.utils import module_docs
 import ansible.constants as C
 from ansible.utils import version
@@ -96,6 +91,9 @@ def print_man(doc):
         for ex in doc['examples']:
             print "%s\n" % (ex['code'])
 
+    if 'plainexamples' in doc and doc['plainexamples'] is not None:
+        print doc['plainexamples']
+
 def print_snippet(doc):
 
     desc = tty_ify("".join(doc['short_description']))
@@ -158,7 +156,7 @@ def main():
 
             filename = utils.plugins.module_finder.find_plugin(module)
             try:
-                doc = module_docs.get_docstring(filename)
+                doc, plainexamples = module_docs.get_docstring(filename)
                 desc = tty_ify(doc.get('short_description', '?'))
                 if len(desc) > 55:
                     desc = desc + '...'
@@ -185,7 +183,7 @@ def main():
             continue
 
         try:
-            doc = module_docs.get_docstring(filename)
+            doc, plainexamples = module_docs.get_docstring(filename)
         except:
             traceback.print_exc()
             sys.stderr.write("ERROR: module %s has a documentation error formatting or is missing documentation\n" % module)
@@ -202,6 +200,7 @@ def main():
             doc['filename']         = filename
             doc['docuri']           = doc['module'].replace('_', '-')
             doc['now_date']         = datetime.date.today().strftime('%Y-%m-%d')
+            doc['plainexamples']    = plainexamples
 
             if options.show_snippet:
                 print_snippet(doc)

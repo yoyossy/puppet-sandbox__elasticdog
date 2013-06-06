@@ -1,6 +1,11 @@
 Ansible Resources
 =================
 
+.. image:: http://ansible.cc/docs/_static/ansible_fest_2013.png
+   :alt: ansiblefest 2013
+   :target: http://ansibleworks.com/fest
+
+
 User contributed playbooks, modules, and articles. This is a small
 curated list, but growing. Everyone is encouraged to add to this
 document, just send in a github pull request to docsite/rst/contrib.rst!
@@ -9,12 +14,12 @@ Ansible Modules
 ```````````````
 
 Ansible modules are a way of adding new client-side logic to ansible.
-They can be written in any language.  Generally our goal is to include most modules in core,
+They can be written in any language.  Generally our goal is to include most modules in core ("batteries included!"),
 though a few may remain outside of core depending on use cases and implementations.
 
 -  `Official "core" ansible modules <http://ansible.cc/docs/modules.html>`_ - various
+-  `Linode <https://github.com/lextoumbourou/ansible-linode>`_ - Lex Toumbourou
 -  `zypper (bash module example) <https://github.com/jpmens/ansible-zypp>`_ - jp\_mens
--  `homebrew <https://gist.github.com/3170079>`_ - swehack
 -  `additional provisioning-related modules <https://github.com/ansible-provisioning>`_ - jhoekx and dagwieers
 -  `dynamic dns updates <https://github.com/jpmens/ansible-m-dnsupdate>`_ - jp\_mens
 
@@ -62,8 +67,8 @@ integrations with other interesting pieces of software.
 -  `uptime (API demo) <https://github.com/ansible/ansible/blob/devel/examples/scripts/uptime.py>`_ - mpdehaan
 -  `vim snippet generator <https://github.com/bleader/ansible_snippet_generator>`_ - bleader
 
-Blogs & Articles
-````````````````
+Blogs, Videos & Articles
+````````````````````````
 
 -  `HighScalability.com <http://highscalability.com/blog/2012/4/18/ansible-a-simple-model-driven-configuration-management-and-c.html>`_ - mpdehaan
 -  `ColoAndCloud.com interview <http://www.coloandcloud.com/editorial/an-interview-with-ansible-author-michael-dehaan/>`_ - mpdehaan
@@ -79,6 +84,8 @@ Blogs & Articles
 -  `Infracoders Presentation <http://www.danielhall.me/2012/10/ansible-talk-infra-coders/>`_ - Daniel Hall
 -  `Ansible - an introduction <https://speakerdeck.com/jpmens/ansible-an-introduction>`_ - jp\_mens
 -  `Using Ansible to setup complex networking - <http://exarv.nl/2013/02/using-ansible-to-setup-complex-networking/>`_ - Robert Verspuy
+-  `Video presentation to Montreal Linux <http://www.youtube.com/embed/up3ofvQNm8c>`_ - Alexandre Bourget
+-  `Provisioning CentOS EC2 Instances with Ansible <http://jpmens.net/2012/11/21/provisioning-centos-ec2-instances-with-ansible/>`_ - jp\_mens
 
 Disclaimer
 ``````````

@@ -20,9 +20,8 @@ import sys
 import getpass
 import os
 import subprocess
-import os.path
+import random
 from ansible.color import stringc
-import ansible.constants as C
 
 cowsay = None
 if os.getenv("ANSIBLE_NOCOWS") is not None:
@@ -34,7 +33,17 @@ elif os.path.exists("/usr/games/cowsay"):
 elif os.path.exists("/usr/local/bin/cowsay"):
     # BSD path for cowsay
     cowsay = "/usr/local/bin/cowsay"
+elif os.path.exists("/opt/local/bin/cowsay"):
+    # MacPorts path for cowsay
+    cowsay = "/opt/local/bin/cowsay"
 
+noncow = os.getenv("ANSIBLE_COW_SELECTION",None)
+if cowsay and noncow == 'random':
+    cmd = subprocess.Popen([cowsay, "-l"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (out, err) = cmd.communicate()
+    cows = out.split()
+    cows.append(False)
+    noncow = random.choice(cows)
 
 # ****************************************************************************
 # 1.1 DEV NOTES
@@ -132,9 +141,13 @@ def regular_generic_msg(hostname, result, oneline, caption):
 
 def banner(msg):
 
-    if cowsay != None:
-        cmd = subprocess.Popen([cowsay, "-W", "60", msg],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if cowsay:
+        runcmd = [cowsay,"-W", "60"]
+        if noncow:
+            runcmd.append('-f')
+            runcmd.append(noncow)
+        runcmd.append(msg)
+        cmd = subprocess.Popen(runcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (out, err) = cmd.communicate()
         return "%s\n" % out
     else:
@@ -218,9 +231,8 @@ class DefaultRunnerCallbacks(object):
     def on_async_failed(self, host, res, jid):
         call_callback_module('runner_on_async_failed', host, res, jid)
 
-    def on_file_diff(self, host, before_string, after_string):
-        if before_string and after_string:
-            call_callback_module('runner_on_file_diff', before_string, after_string)
+    def on_file_diff(self, host, diff):
+        call_callback_module('runner_on_file_diff', diff)
 
 ########################################################################
 
@@ -286,11 +298,9 @@ class CliRunnerCallbacks(DefaultRunnerCallbacks):
         if self.options.tree:
             utils.write_tree_file(self.options.tree, host, utils.jsonify(result2,format=True))
     
-    def on_file_diff(self, host, before_string, after_string):
-        if before_string and after_string:
-            if self.options.diff:
-                print utils.get_diff(before_string, after_string)
-            super(CliRunnerCallbacks, self).on_file_diff(host, before_string, after_string)
+    def on_file_diff(self, host, diff):
+        print utils.get_diff(diff)
+        super(CliRunnerCallbacks, self).on_file_diff(host, diff)
 
 ########################################################################
 
@@ -423,10 +433,9 @@ class PlaybookRunnerCallbacks(DefaultRunnerCallbacks):
         print stringc(msg, 'red')
         super(PlaybookRunnerCallbacks, self).on_async_failed(host,res,jid)
 
-    def on_file_diff(self, host, before_string, after_string):
-        if before_string and after_string:
-            print utils.get_diff(before_string, after_string)
-            super(PlaybookRunnerCallbacks, self).on_file_diff(host, before_string, after_string)
+    def on_file_diff(self, host, diff):
+        print utils.get_diff(diff)
+        super(PlaybookRunnerCallbacks, self).on_file_diff(host, diff)
 
 ########################################################################
 
@@ -455,7 +464,21 @@ class PlaybookCallbacks(object):
         msg = "TASK: [%s]" % name
         if is_conditional:
             msg = "NOTIFIED: [%s]" % name
-        print banner(msg)
+
+        if hasattr(self, 'step') and self.step:
+            resp = raw_input('Perform task: %s (y/n/c): ' % name)
+            if resp.lower() in ['y','yes']:
+                self.skip_task = False
+                print banner(msg)                
+            elif resp.lower() in ['c', 'continue']:
+                self.skip_task = False
+                self.step = False
+                print banner(msg)
+            else:
+                self.skip_task = True
+        else:
+            print banner(msg)                
+        
         call_callback_module('playbook_on_task_start', name, is_conditional)
 
     def on_vars_prompt(self, varname, private=True, prompt=None, encrypt=None, confirm=False, salt_size=None, salt=None, default=None):

@@ -1,6 +1,10 @@
 Command Line Examples And Next Steps
 ====================================
 
+.. image:: http://ansible.cc/docs/_static/ansible_fest_2013.png
+   :alt: ansiblefest 2013
+   :target: http://ansibleworks.com/fest
+
 .. highlight:: bash
 
 The following examples show how to use `/usr/bin/ansible` for running
@@ -226,7 +230,7 @@ also works with ``ansible-playbook``::
 
     $ ansible webservers:dbservers -m command -a "/bin/foo xyz" --limit region
 
-Assuming version 0.9 or later, as with other host patterns, values to limit can be seperated with ";", ":", or ",".
+Assuming version 0.9 or later, as with other host patterns, values to limit can be separated with ";", ":", or ",".
 
 Now let's talk about range selection.   Suppose you have 1000 servers in group 'datacenter', but only want to target one at a time.  This is also easy::
 

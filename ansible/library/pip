@@ -19,6 +19,8 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import tempfile
+
 DOCUMENTATION = '''
 ---
 module: pip
@@ -30,7 +32,7 @@ options:
   name:
     description:
       - The name of a Python library to install
-    required: true
+    required: false
     default: null
   version:
     description:
@@ -48,6 +50,7 @@ options:
     required: false
     default: null
   virtualenv_site_packages:
+    version_added: "1.0"
     description:
       - Whether the virtual environment will inherit packages from the
         global site-packages directory.  Note that if this setting is
@@ -55,14 +58,22 @@ options:
         have any effect, the environment must be deleted and newly
         created.
     required: false
-    default: no
+    default: "no"
+    choices: [ "yes", "no" ]
+  virtualenv_command:
+    version_aded: "1.1"
+    description:
+      - The command to create the virtual environment with. For example
+        C(pyvenv), C(virtualenv), C(virtualenv2).
+    required: false
+    default: virtualenv
   use_mirrors:
     description:
       - Whether to use mirrors when installing python libraries.  If using
         an older version of pip (< 1.0), you should set this to no because
         older versions of pip do not support I(--use-mirrors).
     required: false
-    default: yes
+    default: "yes"
     choices: [ "yes", "no" ]
     version_added: "1.0"
   state:
@@ -86,6 +97,8 @@ examples:
      description: "Install I(Flask) (U(http://flask.pocoo.org/)) into the specified I(virtualenv), inheriting none of the globally installed modules"
    - code: "pip: name=flask virtualenv=/my_app/venv virtualenv_site_packages=yes"
      description: "Install I(Flask) (U(http://flask.pocoo.org/)) into the specified I(virtualenv), inheriting globally installed modules"
+   - code: "pip: name=flask virtualenv=/my_app/venv virtualenv_command=virtualenv-2.7"
+     description: "Install I(Flask) (U(http://flask.pocoo.org/)) into the specified I(virtualenv), using Python 2.7"
    - code: "pip: requirements=/my_app/requirements.txt"
      description: Install specified python requirements.
    - code: "pip: requirements=/my_app/requirements.txt virtualenv=/my_app/venv"
@@ -93,7 +106,7 @@ examples:
    - code: "pip: requirements=/my_app/requirements.txt extra_args='-i https://example.com/pypi/simple'"
      description: Install specified python requirements and custom Index URL.
 notes:
-   - Please note that U(http://www.virtualenv.org/, virtualenv) must be installed on the remote host if the virtualenv parameter is specified.
+   - Please note that virtualenv (U(http://www.virtualenv.org/)) must be installed on the remote host if the virtualenv parameter is specified.
 requirements: [ "virtualenv", "pip" ]
 author: Matt Wright
 '''
@@ -148,19 +161,21 @@ def main():
             version=dict(default=None, required=False),
             requirements=dict(default=None, required=False),
             virtualenv=dict(default=None, required=False),
-            virtualenv_site_packages=dict(default='no', choices=BOOLEANS),
-            use_mirrors=dict(default='yes', choices=BOOLEANS),
+            virtualenv_site_packages=dict(default='no', type='bool'),
+            virtualenv_command=dict(default='virtualenv', required=False),
+            use_mirrors=dict(default='yes', type='bool'),
             extra_args=dict(default=None, required=False),
         ),
         required_one_of=[['name', 'requirements']],
         mutually_exclusive=[['name', 'requirements']],
+        supports_check_mode=True
     )
 
     state = module.params['state']
     name = module.params['name']
     version = module.params['version']
     requirements = module.params['requirements']
-    use_mirrors = module.boolean(module.params['use_mirrors'])
+    use_mirrors = module.params['use_mirrors']
     extra_args = module.params['extra_args']
 
     if state == 'latest' and version is not None:
@@ -172,11 +187,15 @@ def main():
     out = ''
 
     env = module.params['virtualenv']
+    virtualenv_command = module.params['virtualenv_command']
 
     if env:
-        virtualenv = module.get_bin_path('virtualenv', True)
+        env = os.path.expanduser(env)
+        virtualenv = module.get_bin_path(virtualenv_command, True)
         if not os.path.exists(os.path.join(env, 'bin', 'activate')):
-            if module.boolean(module.params['virtualenv_site_packages']):
+            if module.check_mode:
+                module.exit_json(changed=True)
+            if module.params['virtualenv_site_packages']:
                 cmd = '%s --system-site-packages %s' % (virtualenv, env)
             else:
                 cmd = '%s %s' % (virtualenv, env)
@@ -198,6 +217,9 @@ def main():
     elif requirements:
         cmd += ' -r %s' % requirements
 
+    if module.check_mode:
+        module.exit_json(changed=True)
+    os.chdir(tempfile.gettempdir())
     rc, out_pip, err_pip = module.run_command(cmd)
     out += out_pip
     err += err_pip
@@ -212,7 +234,7 @@ def main():
         changed = 'Successfully installed' in out_pip
 
     module.exit_json(changed=changed, cmd=cmd, name=name, version=version,
-                     state=state, requirements=requirements, virtualenv=env)
+                     state=state, requirements=requirements, virtualenv=env, stdout=out, stderr=err)
 
 # this is magic, see lib/ansible/module_common.py
 #<<INCLUDE_ANSIBLE_MODULE_COMMON>>

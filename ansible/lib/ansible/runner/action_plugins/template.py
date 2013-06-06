@@ -16,7 +16,7 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-
+import pipes
 from ansible import utils
 from ansible import errors
 from ansible.runner.return_data import ReturnData
@@ -27,7 +27,7 @@ class ActionModule(object):
     def __init__(self, runner):
         self.runner = runner
 
-    def run(self, conn, tmp, module_name, module_args, inject):
+    def run(self, conn, tmp, module_name, module_args, inject, complex_args=None, **kwargs):
         ''' handler for template operations '''
 
         # note: since this module just calls the copy module, the --check mode support
@@ -37,7 +37,11 @@ class ActionModule(object):
             raise errors.AnsibleError("in current versions of ansible, templates are only usable in playbooks")
 
         # load up options
-        options  = utils.parse_kv(module_args)
+        options  = {}
+        if complex_args:
+            options.update(complex_args)
+        options.update(utils.parse_kv(module_args))
+
         source   = options.get('src', None)
         dest     = options.get('dest', None)
 
@@ -79,39 +83,36 @@ class ActionModule(object):
 
         if local_md5 != remote_md5:
 
-             # template is different from the remote value
+            # template is different from the remote value
 
-             # if showing diffs, we need to get the remote value
-             dest_contents = None
+            # if showing diffs, we need to get the remote value
+            dest_contents = ''
 
-             if self.runner.diff:
-                 # using persist_files to keep the temp directory around to avoid needing to grab another
-                 dest_result = self.runner._execute_module(conn, tmp, 'slurp', "path=%s" % dest, inject=inject, persist_files=True)
-                 if 'content' in dest_result.result:
-                     dest_contents = dest_result.result['content']
-                     if dest_result.result['encoding'] == 'base64':
-                         dest_contents = base64.b64decode(dest_contents)
-                     else:
-                         raise Exception("unknown encoding, failed: %s" % dest_result.result)
-                 else:
-                     dest_result = ''
+            if self.runner.diff:
+                # using persist_files to keep the temp directory around to avoid needing to grab another
+                dest_result = self.runner._execute_module(conn, tmp, 'slurp', "path=%s" % dest, inject=inject, persist_files=True)
+                if 'content' in dest_result.result:
+                    dest_contents = dest_result.result['content']
+                    if dest_result.result['encoding'] == 'base64':
+                        dest_contents = base64.b64decode(dest_contents)
+                    else:
+                        raise Exception("unknown encoding, failed: %s" % dest_result.result)
  
-             xfered = self.runner._transfer_str(conn, tmp, 'source', resultant)
+            xfered = self.runner._transfer_str(conn, tmp, 'source', resultant)
 
-             # fix file permissions when the copy is done as a different user
-             if self.runner.sudo and self.runner.sudo_user != 'root':
-                 self.runner._low_level_exec_command(conn, "chmod a+r %s" % xfered, tmp)
+            # fix file permissions when the copy is done as a different user
+            if self.runner.sudo and self.runner.sudo_user != 'root':
+                self.runner._low_level_exec_command(conn, "chmod a+r %s" % xfered, tmp)
 
-             # run the copy module
-             module_args = "%s src=%s dest=%s" % (module_args, xfered, dest)
+            # run the copy module
+            module_args = "%s src=%s dest=%s original_basename=%s" % (module_args, pipes.quote(xfered), pipes.quote(dest), pipes.quote(os.path.basename(source)))
 
-             if self.runner.check:
-                 return ReturnData(conn=conn, comm_ok=True, result=dict(changed=True), before_diff_value=dest_contents, after_diff_value=resultant)
-             else:
-                 res =  self.runner._execute_module(conn, tmp, 'copy', module_args, inject=inject)
-                 res.before_diff_value = dest_contents
-                 res.after_diff_value = resultant
-                 return res
+            if self.runner.check:
+                return ReturnData(conn=conn, comm_ok=True, result=dict(changed=True), diff=dict(before_header=dest, after_header=source, before=dest_contents, after=resultant))
+            else:
+                res = self.runner._execute_module(conn, tmp, 'copy', module_args, inject=inject, complex_args=complex_args)
+                res.diff = dict(before=dest_contents, after=resultant)
+                return res
         else:
-             return ReturnData(conn=conn, comm_ok=True, result=dict(changed=False))
+            return self.runner._execute_module(conn, tmp, 'file', module_args, inject=inject, complex_args=complex_args)
 

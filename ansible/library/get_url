@@ -31,6 +31,12 @@ short_description: Downloads files from HTTP, HTTPS, or FTP to node
 description:
      - Downloads files from HTTP, HTTPS, or FTP to the remote server. The remote
        server I(must) have direct access to the remote resource.
+     - By default, if an environment variable C(<protocol>_proxy) is set on
+       the target host, requests will be sent through that proxy. This
+       behaviour can be overriden by setting a variable for this task
+       (see `setting the environment
+       <http://ansible.cc/docs/playbooks2.html#setting-the-environment-and-working-with-proxies>`_),
+       or by using the use_proxy option.
 version_added: "0.6"
 options:
   url:
@@ -42,10 +48,10 @@ options:
   dest:
     description:
       - absolute path of where to download the file to.
-      - If I(dest) is a directory, the basename of the file on the remote server will be used. If a directory, C(thirsty=yes) must also be set.
+      - If I(dest) is a directory, the basename of the file on the remote server will be used. If a directory, C(force=yes) must also be set.
     required: true
     default: null
-  thirsty:
+  force:
     description:
       - if C(yes), will download the file every time and replace the
         file if the contents change. If C(no), the file will only be downloaded if
@@ -55,19 +61,29 @@ options:
     required: false
     choices: [ "yes", "no" ]
     default: "no"
+    aliases: [ "thirsty" ]
+  use_proxy:
+    description:
+      - if C(no), it will not use a proxy, even if one is defined by
+        in an environment variable on the target hosts.
+    required: false
+    default: yes
+    choices: [yes, no]
   others:
     description:
       - all arguments accepted by the M(file) module also work here
     required: false
-examples:
-   - code: "get_url: url=http://example.com/path/file.conf dest=/etc/foo.conf mode=0440"
-     description: "Example from Ansible Playbooks"
 notes:
     - This module doesn't yet support configuration for proxies.
 # informational: requirements for nodes
 requirements: [ urllib2, urlparse ]
 author: Jan-Piet Mens
 '''
+
+EXAMPLES='''
+get_url: url=http://example.com/path/file.conf dest=/etc/foo.conf mode=0440
+'''
+
 
 HAS_URLLIB2 = True
 try:
@@ -91,7 +107,7 @@ def url_filename(url):
         return 'index.html'
     return fn
 
-def url_do_get(module, url, dest):
+def url_do_get(module, url, dest, use_proxy):
     """
     Get url and return request and info
     Credits: http://stackoverflow.com/questions/7006574/how-to-download-file-from-ftp
@@ -100,7 +116,10 @@ def url_do_get(module, url, dest):
     USERAGENT = 'ansible-httpget'
     info = dict(url=url, dest=dest)
     r = None
+    handlers = []
+
     parsed = urlparse.urlparse(url)
+
     if '@' in parsed[1]:
         credentials, netloc = parsed[1].split('@', 1)
         if ':' in credentials:
@@ -120,16 +139,21 @@ def url_do_get(module, url, dest):
 
         authhandler = urllib2.HTTPBasicAuthHandler(passman)
         # create the AuthHandler
+        handlers.append(authhandler)
 
-        opener = urllib2.build_opener(authhandler)
-        urllib2.install_opener(opener)
         #reconstruct url without credentials
         url = urlparse.urlunparse(parsed)
 
+    if not use_proxy:
+        proxyhandler = urllib2.ProxyHandler({})
+        handlers.append(proxyhandler)
+
+    opener = urllib2.build_opener(*handlers)
+    urllib2.install_opener(opener)
     request = urllib2.Request(url)
     request.add_header('User-agent', USERAGENT)
 
-    if os.path.exists(dest):
+    if os.path.exists(dest) and not module.params['force']:
         t = datetime.datetime.utcfromtimestamp(os.path.getmtime(dest))
         tstamp = t.strftime('%a, %d %b %Y %H:%M:%S +0000')
         request.add_header('If-Modified-Since', tstamp)
@@ -148,14 +172,14 @@ def url_do_get(module, url, dest):
 
     return r, info
 
-def url_get(module, url, dest):
+def url_get(module, url, dest, use_proxy):
     """
     Download url and store at dest.
     If dest is a directory, determine filename from url.
     Return (tempfile, info about the request)
     """
 
-    req, info = url_do_get(module, url, dest)
+    req, info = url_do_get(module, url, dest, use_proxy)
 
     # TODO: should really handle 304, but how? src file could exist (and be newer) but empty
     if info['status'] == 304:
@@ -192,24 +216,26 @@ def main():
         argument_spec = dict(
             url = dict(required=True),
             dest = dict(required=True),
-            thirsty = dict(default='no', choices=BOOLEANS)
+            force = dict(default='no', aliases=['thirsty'], type='bool'),
+            use_proxy = dict(default='yes', type='bool')
         ),
         add_file_common_args=True
     )
 
     url  = module.params['url']
     dest = os.path.expanduser(module.params['dest'])
-    thirsty = module.boolean(module.params['thirsty'])
+    force = module.params['force']
+    use_proxy = module.params['use_proxy']
 
     if os.path.isdir(dest):
         dest = os.path.join(dest, url_filename(url))
 
-    if not thirsty:
+    if not force:
         if os.path.exists(dest):
             module.exit_json(msg="file already exists", dest=dest, url=url, changed=False)
 
     # download to tmpsrc
-    tmpsrc, info = url_get(module, url, dest)
+    tmpsrc, info = url_get(module, url, dest, use_proxy)
     md5sum_src   = None
     md5sum_dest  = None
 

@@ -111,7 +111,8 @@ options:
       - If the job should be run at reboot, will ignore minute, hour, day, and month settings in favour of C(@reboot)
     version_added: "1.0"
     required: false
-    default: False
+    default: "no"
+    choices: [ "yes", "no" ]
     aliases: []
 
 examples:
@@ -119,11 +120,12 @@ examples:
      description: Ensure a job that runs at 2 and 5 exists. Creates an entry like "* 5,2 * * ls -alh > /dev/null"
    - code: 'cron: name="an old job" cron job="/some/dir/job.sh" state=absent'
      description: 'Ensure an old job is no longer present. Removes any job that is preceded by "#Ansible: an old job" in the crontab'
-   - code: 'cron: name="a job for reboot" reboot=True job="/some/job.sh"'
+   - code: 'cron: name="a job for reboot" reboot=yes job="/some/job.sh"'
      description: 'Creates an entry like "@reboot /some/job.sh"'
    - code: 'cron: name="yum autoupdate" weekday="2" minute=0 hour=12 user="root" job="YUMINTERACTIVE=0 /usr/sbin/yum-autoupdate" cron_file=ansible_yum-autoupdate'
 
-requirements: cron
+requirements:
+  - cron
 author: Dane Summers
 updates: Mike Grozak
 """
@@ -167,8 +169,9 @@ def find_job(name,tmpfile):
     return []
 
 def add_job(module,name,job,tmpfile):
-    cmd = "echo \"#Ansible: %s\n%s\" >> %s" % (name,job,tmpfile)
-    return module.run_command(cmd)
+    f = open(tmpfile, 'a')
+    f.write("#Ansible: %s\n%s\n" % (name, job))
+    f.close()
 
 def update_job(name,job,tmpfile):
     return _update_job(name,job,tmpfile,do_add_job)
@@ -178,7 +181,7 @@ def do_add_job(lines, comment, job):
     lines.append(job)
 
 def remove_job(name,tmpfile):
-    return _update_job(name,"",tmpfile,do_remove_job)
+    return _update_job(name, "", tmpfile, do_remove_job)
 
 def do_remove_job(lines,comment,job):
     return None
@@ -188,9 +191,10 @@ def remove_job_file(cron_file):
     os.unlink(fname)
 
 def _update_job(name,job,tmpfile,addlinesfunction):
-    ansiblename="#Ansible: %s" % (name)
+    ansiblename = "#Ansible: %s" % (name)
     f = open(tmpfile)
     lines = f.read().splitlines()
+    f.close()
     newlines = []
     comment = None
     for l in lines:
@@ -201,17 +205,16 @@ def _update_job(name,job,tmpfile,addlinesfunction):
             comment = l
         else:
             newlines.append(l)
-    f.close()
-    f = open(tmpfile,'w')
+    f = open(tmpfile, 'w')
     for l in newlines:
         f.write(l)
         f.write('\n')
     f.close()
 
     if len(newlines) == 0:
-        return (0,"","",True)
+        return True
     else:
-        return (0,"","",False) # TODO add some more error testing 
+        return False # TODO add some more error testing 
 
 def get_cron_job(minute,hour,day,month,weekday,job,user,cron_file,reboot):
     if reboot:
@@ -223,7 +226,7 @@ def get_cron_job(minute,hour,day,month,weekday,job,user,cron_file,reboot):
         if cron_file:
             return "%s %s %s %s %s %s %s" % (minute,hour,day,month,weekday,user,job)
         else:
-            return  "%s %s %s %s %s %s" % (minute,hour,day,month,weekday,job)
+            return "%s %s %s %s %s %s" % (minute,hour,day,month,weekday,job)
 
     return None
 
@@ -258,17 +261,17 @@ def main():
             job=dict(required=False),
             cron_file=dict(required=False),
             state=dict(default='present', choices=['present', 'absent']),
-            backup=dict(default=False, choices=BOOLEANS),
+            backup=dict(default=False, type='bool'),
             minute=dict(default='*'),
             hour=dict(default='*'),
             day=dict(default='*'),
             month=dict(default='*'),
             weekday=dict(default='*'),
-            reboot=dict(required=False, default=False, choices=BOOLEANS)
+            reboot=dict(required=False, default=False, type='bool')
         )
     )
 
-    backup     = module.boolean(module.params.get('backup', False))
+    backup     = module.params['backup']
     name       = module.params['name']
     user       = module.params['user']
     job        = module.params['job']
@@ -278,7 +281,7 @@ def main():
     day        = module.params['day']
     month      = module.params['month']
     weekday    = module.params['weekday']
-    reboot     = module.boolean(module.params.get('reboot', False))
+    reboot     = module.params['reboot']
     state      = module.params['state']
     do_install = module.params['state'] == 'present'
     changed    = False
@@ -314,15 +317,15 @@ def main():
     old_job = find_job(name,backupfile)
     if do_install:
         if len(old_job) == 0:
-            (rc, out, err) = add_job(module,name,job,tmpfile.name)
+            add_job(module,name,job,tmpfile.name)
             changed = True
         if len(old_job) > 0 and old_job[1] != job:
-            (rc, out, err) = update_job(name,job,tmpfile.name)
+            update_job(name,job,tmpfile.name)
             changed = True
     else:
         if len(old_job) > 0:
             # if rm is true after the next line, file will be deleted afterwards
-            (rc, out, err, rm) = remove_job(name,tmpfile.name)
+            rm = remove_job(name,tmpfile.name)
             changed = True
         else:
             # there is no old_jobs for deletion - we should leave everything
@@ -332,12 +335,9 @@ def main():
             os.unlink(backupfile)
             module.exit_json(changed=changed,cron_file=cron_file,state=state)
 
-    if (rc != 0):
-        module.fail_json(msg=err)
-
     if changed:
         # If the file is empty - remove it
-        if rm:
+        if rm and cron_file:
             remove_job_file(cron_file)
         else:
             if backup:

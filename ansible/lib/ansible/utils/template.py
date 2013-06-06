@@ -139,7 +139,7 @@ def _varFind(basedir, text, vars, lookup_fatal, depth, expand_lists):
             brace_level += 1
         elif is_complex and text[end] == '}':
             brace_level -= 1
-        elif is_complex and text[end] in ('$', '[', ']'):
+        elif is_complex and text[end] in ('$', '[', ']', '-'):
             pass
         elif is_complex and text[end] == '.':
             if brace_level == 1:
@@ -162,7 +162,7 @@ def _varFind(basedir, text, vars, lookup_fatal, depth, expand_lists):
         if basedir is None:
             return {'replacement': None, 'start': start, 'end': end}
         var_end -= 1
-    	from ansible import utils
+        from ansible import utils
         args = text[part_start:var_end]
         if lookup_plugin_name == 'LOOKUP':
             lookup_plugin_name, args = args.split(",", 1)
@@ -173,7 +173,9 @@ def _varFind(basedir, text, vars, lookup_fatal, depth, expand_lists):
         if instance is not None:
             try:
                 replacement = instance.run(args, inject=vars)
-            except errors.AnsibleError:
+                if expand_lists:
+                    replacement = ",".join([str(x) for x in replacement])
+            except:
                 if not lookup_fatal:
                     replacement = None
                 else:
@@ -212,7 +214,7 @@ def varReplace(basedir, raw, vars, lookup_fatal=True, depth=0, expand_lists=Fals
 
         replacement = m['replacement']
         if expand_lists and isinstance(replacement, (list, tuple)):
-            replacement = ",".join(replacement)
+            replacement = ",".join([str(x) for x in replacement])
         if isinstance(replacement, (str, unicode)):
             replacement = varReplace(basedir, replacement, vars, lookup_fatal, depth=depth+1, expand_lists=expand_lists)
         if replacement is None:
@@ -259,11 +261,13 @@ class _jinja2_vars(object):
     here.
     extras is a list of locals to also search for variables. 
     '''
+
     def __init__(self, basedir, vars, globals, *extras):
         self.basedir = basedir
         self.vars = vars
         self.globals = globals
         self.extras = extras
+
     def __contains__(self, k):
         if k in self.vars:
             return True
@@ -273,6 +277,7 @@ class _jinja2_vars(object):
         if k in self.globals:
             return True
         return False
+
     def __getitem__(self, varname):
         if varname not in self.vars:
             for i in self.extras:
@@ -288,6 +293,7 @@ class _jinja2_vars(object):
             return var
         else:
             return template(self.basedir, var, self.vars)
+
     def add_locals(self, locals):
         '''
         If locals are provided, create a copy of self containing those
@@ -313,7 +319,20 @@ def template_from_file(basedir, path, vars):
     from ansible import utils
     realpath = utils.path_dwim(basedir, path)
     loader=jinja2.FileSystemLoader([basedir,os.path.dirname(realpath)])
-    environment = jinja2.Environment(loader=loader, trim_blocks=True)
+
+    '''
+    if some extensions are set via jinja_extensions in ansible.cfg, we try
+    to load them with the jinja environment
+    '''
+    jinja_exts = []
+    if C.DEFAULT_JINJA2_EXTENSIONS:
+        '''
+        Let's make sure the configuration directive doesn't contain spaces
+        and split extensions in an array
+        '''
+        jinja_exts = C.DEFAULT_JINJA2_EXTENSIONS.replace(" ", "").split(',')
+
+    environment = jinja2.Environment(loader=loader, trim_blocks=True, extensions=jinja_exts)
     for filter_plugin in utils.plugins.filter_loader.all():
         filters = filter_plugin.filters()
         if not isinstance(filters, dict):

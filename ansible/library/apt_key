@@ -23,7 +23,7 @@ DOCUMENTATION = '''
 ---
 module: apt_key
 author: Jayson Vantuyl & others
-version_added: 1.0
+version_added: "1.0"
 short_description: Add or remove an apt key
 description:
     - Add or remove an I(apt) key, optionally downloading it
@@ -84,11 +84,11 @@ def all_keys(module):
     results = []
     lines = out.split('\n')
     for line in lines:
-       if line.startswith("pub"):
-          tokens = line.split()
-          code = tokens[1]
-          (len_type, real_code) = code.split("/")
-          results.append(real_code)
+        if line.startswith("pub"):
+            tokens = line.split()
+            code = tokens[1]
+            (len_type, real_code) = code.split("/")
+            results.append(real_code)
     return results
 
 def key_present(module, key_id):
@@ -115,9 +115,9 @@ def add_key(module, key):
     (rc, out, err) = module.run_command(cmd, data=key, check_rc=True)
     return True
 
-def remove_key(key_id):
+def remove_key(module, key_id):
     # FIXME: use module.run_command, fail at point of error and don't discard useful stdin/stdout
-    cmd = 'apt-key del %s' 
+    cmd = 'apt-key del %s' % key_id
     (rc, out, err) = module.run_command(cmd, check_rc=True)
     return True
 
@@ -130,6 +130,7 @@ def main():
             key=dict(required=False),
             state=dict(required=False, choices=['present', 'absent'], default='present')
         ),
+        supports_check_mode=True
     )
 
     key_id          = module.params['id']
@@ -142,6 +143,7 @@ def main():
     check_missing_binaries(module)
 
     keys = all_keys(module)
+    return_values = {}
 
     if state == 'present':
         if key_id and key_id in keys:
@@ -152,6 +154,8 @@ def main():
             if key_id and key_id in keys:
                 module.exit_json(changed=False)
             else:
+                if module.check_mode:
+                    module.exit_json(changed=True)
                 add_key(module, data)
                 changed=False
                 keys2 = all_keys(module)
@@ -164,13 +168,15 @@ def main():
         if not key_id:
             module.fail_json(msg="key is required")
         if key_id in keys:
-            if remove_key(key_id):
+            if module.check_mode:
+                module.exit_json(changed=True)
+            if remove_key(module, key_id):
                 changed=True
             else:
                 # FIXME: module.fail_json  or exit-json immediately at point of failure
-                module.fail_json(msg="error removing key_id", **return_values(True))
+                module.fail_json(msg="error removing key_id", **return_values)
 
-    module.exit_json(changed=changed, **return_values())
+    module.exit_json(changed=changed, **return_values)
 
 # include magic from lib/ansible/module_common.py
 #<<INCLUDE_ANSIBLE_MODULE_COMMON>>

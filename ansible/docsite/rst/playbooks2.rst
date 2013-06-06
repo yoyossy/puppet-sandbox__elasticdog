@@ -1,6 +1,11 @@
 Advanced Playbooks
 ==================
 
+.. image:: http://ansible.cc/docs/_static/ansible_fest_2013.png
+   :alt: ansiblefest 2013
+   :target: http://ansibleworks.com/fest
+
+
 Here are some advanced features of the playbooks language.  Using all of these features
 are not neccessary, but many of them will prove useful.  If a feature doesn't seem immediately
 relevant, feel free to skip it.  For many people, the features documented in `playbooks` will
@@ -88,22 +93,28 @@ that is preferred::
 
     {{ ansible_eth0["ipv4"]["address"] }}
 
-Accessing Information About Other Hosts
-```````````````````````````````````````
+Magic Variables, and How To Access Information About Other Hosts
+````````````````````````````````````````````````````````````````
 
-If your database server wants to check the value of a 'fact' from another node, or an inventory variable
+Even if you didn't define them yourself, ansible provides a few variables for you, automatically.
+The most important of these are 'hostvars', 'group_names', and 'groups'.
+
+Hostvars lets you ask about the variables of another host, including facts that have been gathered
+about that host.  If, at this point, you haven't talked to that host yet in any play in the playbook
+or set of playbooks, you can get at the variables, but you will not be able to see the facts.
+
+If your database server wants to use the value of a 'fact' from another node, or an inventory variable
 assigned to another node, it's easy to do so within a template or even an action line::
 
     ${hostvars.hostname.factname}
 
-.. note::
-   No database or other complex system is required to exchange data
-   between hosts.  The hosts that you want to reference data from must
-   be included in either the current play or any previous play if you
-   are using a version prior to 0.8.  If you are using 0.8, and you have
-   not yet contacted the host, you'll be able to read inventory variables
-   but not fact variables.  Speak to the host by including it in a play
-   to make fact information available.
+Note in playbooks if your hostname contains a dash or periods in it, escape it like so::
+
+    ${hostvars.{test.example.com}.ansible_distribution}
+
+In Jinja2 templates, this can also be expressed as::
+
+    {{ hostvars['test.example.com']['ansible_distribution'] }}
 
 Additionally, *group_names* is a list (array) of all the groups the current host is in.  This can be used in templates using Jinja2 syntax to make template source files that vary based on the group membership (or role) of the host::
 
@@ -118,14 +129,24 @@ For example::
       # something that applies to all app servers.
    {% endfor %}
 
-Use cases include pointing a frontend proxy server to all of the app servers, setting up the correct firewall rules between servers, etc.
+A frequently used idiom is walking a group to find all IP addresses in that group::
 
-*inventory_hostname* is the name of the hostname as configured in Ansible's inventory host file.  This can
+   {% for host in groups['app_servers'] %}
+      {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}
+   {% endfor %}
+
+An example of this could include pointing a frontend proxy server to all of the app servers, setting up the correct firewall rules between servers, etc.
+
+Just a few other 'magic' variables are available...  There aren't many.
+
+Additionally, *inventory_hostname* is the name of the hostname as configured in Ansible's inventory host file.  This can
 be useful for when you don't want to rely on the discovered hostname `ansible_hostname` or for other mysterious
-reasons.  If you have a long FQDN, *inventory_hostname_short* (in Ansible 0.6) also contains the part up to the first
-period.
+reasons.  If you have a long FQDN, *inventory_hostname_short* also contains the part up to the first
+period, without the rest of the domain.
 
 Don't worry about any of this unless you think you need it.  You'll know when you do.
+
+Also available, *inventory_dir* is the pathname of the directory holding Ansible's inventory host file.
 
 Variable File Separation
 ````````````````````````
@@ -195,6 +216,40 @@ some other options, but otherwise works equivalently::
        prompt: "Product release version"
        private: no
 
+If `Passlib <http://pythonhosted.org/passlib/>`_ is installed, vars_prompt can also crypt the
+entered value so you can use it, for instance, with the user module to define a password::
+
+   vars_prompt:
+     - name: "my_password2"
+       prompt: "Enter password2"
+       private: yes
+       encrypt: "md5_crypt"
+       confirm: yes
+       salt_size: 7
+
+You can use any crypt scheme supported by 'Passlib':
+
+- *des_crypt* - DES Crypt
+- *bsdi_crypt* - BSDi Crypt
+- *bigcrypt* - BigCrypt
+- *crypt16* - Crypt16
+- *md5_crypt* - MD5 Crypt
+- *bcrypt* - BCrypt
+- *sha1_crypt* - SHA-1 Crypt
+- *sun_md5_crypt* - Sun MD5 Crypt
+- *sha256_crypt* - SHA-256 Crypt
+- *sha512_crypt* - SHA-512 Crypt
+- *apr_md5_crypt* - Apache’s MD5-Crypt variant
+- *phpass* - PHPass’ Portable Hash
+- *pbkdf2_digest* - Generic PBKDF2 Hashes
+- *cta_pbkdf2_sha1* - Cryptacular’s PBKDF2 hash
+- *dlitz_pbkdf2_sha1* - Dwayne Litzenberger’s PBKDF2 hash
+- *scram* - SCRAM Hash
+- *bsd_nthash* - FreeBSD’s MCF-compatible nthash encoding
+
+However, the only parameters accepted are 'salt' or 'salt_size'. You can use you own salt using
+'salt', or have one generated automatically using 'salt_size'. If nothing is specified, a salt
+of size 8 will be generated.
 
 Passing Variables On The Command Line
 `````````````````````````````````````
@@ -276,7 +331,7 @@ In Ansible 0.8, a few shortcuts are available for testing whether a variable is 
 
 There is a matching 'is_unset' that works the same way.  Quoting the variable inside the function is mandatory.
 
-When combining `only_if` with `with_items`, be aware that the `only_if` statement is processed seperately for each item.
+When combining `only_if` with `with_items`, be aware that the `only_if` statement is processed separately for each item.
 This is by design::
 
     tasks:
@@ -295,7 +350,7 @@ Conditional Execution (Simplified)
 
 In Ansible 0.9, we realized that only_if was a bit syntactically complicated, and exposed too much Python
 to the user.  As a result, the 'when' set of keywords was added.  The 'when' statements do not have
-to be quoted or casted to specify types, but you should seperate any variables used with whitespace.  In
+to be quoted or casted to specify types, but you should separate any variables used with whitespace.  In
 most cases users will be able to use 'when', but for more complex cases, only_if may still be required.
 
 Here are various examples of 'when' in use.  'when' is incompatible with 'only_if' in the same task::
@@ -353,6 +408,13 @@ registered tasks.  As an example::
       action: shell /bin/true
       when_changed: $result
 
+Note that if you have several tasks that all share the same conditional statement, you can affix the conditional
+to a task include statement as below.  Note this does not work with playbook includes, just task includes.  All the tasks
+get evaluated, but the conditional is applied to each and every task::
+
+    - include: tasks/sometasks.yml
+      when_string: "'reticulating splines' in $output"
+
 Conditional Imports
 ```````````````````
 
@@ -409,7 +471,7 @@ Loops
 
 To save some typing, repeated tasks can be written in short-hand like so::
 
-    - name: add user $item
+    - name: add several users
       action: user name=$item state=present groups=wheel
       with_items:
          - testuser1
@@ -455,7 +517,7 @@ be used like this::
 
         # copy each file over that matches the given pattern
         - action: copy src=$item dest=/etc/fooapp/ owner=root mode=600
-          with_fileglob: 
+          with_fileglob:
             - /playbooks/files/fooapp/*
 
 'with_file' loads data in from a file directly::
@@ -480,7 +542,7 @@ Many new lookup abilities were added in 0.9.  Remeber lookup plugins are run on 
       tasks:
 
          - action: debug msg="$item is an environment variable"
-           with_env: 
+           with_env:
              - HOME
              - LANG
 
@@ -522,7 +584,7 @@ can specify a start, end, and an optional step value.
 Arguments can be either key-value pairs or as a shortcut in the format
 "[start-]end[/stride][:format]".  The format is a printf style string.
 
-Numerical values can be specified in decimal, hexadecimal (0x3f8) or octal (0600). 
+Numerical values can be specified in decimal, hexadecimal (0x3f8) or octal (0600).
 Negative numbers are not supported.  This works as follows::
 
     ---
@@ -550,10 +612,88 @@ Negative numbers are not supported.  This works as follows::
         - group: name=group${item} state=present
           with_sequence: count=4
 
+.. versionadded: 1.1
+
+'with_password' and associated macro "$PASSWORD" generate a random plaintext password and store it in
+a file at a given filepath.  Support for crypted save modes (as with vars_prompt) are pending.  If the file exists previously, "$PASSWORD"/'with_password' will retrieve its contents, behaving just like $FILE/'with_file'. Usage of variables like "${inventory_hostname}" in the filepath can be used to set up random passwords per host.
+
+Generated passwords contain a random mix of upper and lowercase ASCII letters, the
+numbers 0-9 and punctuation (". , : - _"). The default length of a generated password is 30 characters. This length can be changed by passing an extra parameter::
+
+    ---
+    - hosts: all
+
+      tasks:
+
+        # create a mysql user with a random password:
+        - mysql_user: name=$client
+                      password=$PASSWORD(credentials/$client/$tier/$role/mysqlpassword)
+                      priv=$client_$tier_$role.*:ALL
+
+        (...)
+
+        # dump a mysql database with a given password (this example showing the other form).
+        - mysql_db: name=$client_$tier_$role
+                    login_user=$client
+                    login_password=$item
+                    state=dump
+                    target=/tmp/$client_$tier_$role_backup.sql
+          with_password: credentials/$client/$tier/$role/mysqlpassword
+
+        # make a longer or shorter password by appending a length parameter:
+        - mysql_user: name=some_name
+                      password=$item
+          with_password: files/same/password/everywhere length=15
+
+Setting the Environment (and Working With Proxies)
+``````````````````````````````````````````````````
+
+.. versionadded: 1.1
+
+It is quite possible that you may need to get package updates through a proxy, or even get some package
+updates through a proxy and access other packages not through a proxy.  Ansible makes it easy for you
+to configure your environment by using the 'environment' keyword.  Here is an example::
+
+    - hosts: all
+      user: root
+
+      tasks:
+
+        - apt: name=cobbler state=installed
+          environment:
+            http_proxy: http://proxy.example.com:8080
+
+The environment can also be stored in a variable, and accessed like so::
+
+    - hosts: all
+      user: root
+
+      # here we make a variable named "env" that is a dictionary
+      vars:
+        proxy_env:
+          http_proxy: http://proxy.example.com:8080
+
+      tasks:
+
+        - apt: name=cobbler state=installed
+          environment: $proxy_env
+
+While just proxy settings were shown above, any number of settings can be supplied.  The most logical place
+to define an environment hash might be a group_vars file, like so::
+
+    ----
+    # file: group_vars/boston
+
+    ntp_server: ntp.bos.example.com
+    backup: bak.bos.example.com
+    proxy_env:
+      http_proxy: http://proxy.bos.example.com:8080
+      https_proxy: http://proxy.bos.example.com:8080
+
 Getting values from files
 `````````````````````````
 
-.. versionadded: 0.8
+.. versionadded:: 0.8
 
 Sometimes you'll want to include the content of a file directly into a playbook.  You can do so using a macro.
 This syntax will remain in future versions, though we will also will provide ways to do this via lookup plugins (see "More Loops") as well.  What follows
@@ -568,6 +708,10 @@ is an example using the authorized_key module, which requires the actual text of
              - snowball
 
 The "$PIPE" macro works just like file, except you would feed it a command string instead.  It executes locally, not remotely, as does $FILE.
+
+Because Ansible uses lazy evaluation, a "$PIPE" macro will be executed each time it is used. For
+example, it will be executed separately for each host, and if it is used in a variable definition,
+it will be executed each time the variable is evaluated.
 
 Selecting Files And Templates Based On Variables
 ````````````````````````````````````````````````
@@ -744,8 +888,9 @@ a good idea::
         delegate_to: 127.0.0.1
 
 
-Here is the same playbook as above, but using the shorthand syntax,
-'local_action', for delegating to 127.0.0.1::
+These commands will run on 127.0.0.1, which is the machine running Ansible. There is also a shorthand syntax that 
+you can use on a per-task basis: 'local_action'. Here is the same playbook as above, but using the shorthand 
+syntax for delegating to 127.0.0.1::
 
     ---
     # ...
@@ -757,6 +902,18 @@ Here is the same playbook as above, but using the shorthand syntax,
 
       - name: add back to load balancer pool
         local_action: command /usr/bin/add_back_to_pool $inventory_hostname
+
+A common pattern is to use a local action to call 'rsync' to recursively copy files to the managed servers.
+Here is an example::
+
+    ---
+    # ...
+      tasks:
+      - name: recursively copy files from management server to target
+        local_action: command rsync -a /path/to/files $inventory_hostname:/path/to/target/
+
+Note that you must have passphrase-less SSH keys or an ssh-agent configured for this to work, otherwise rsync
+will need to ask for a passphrase.
 
 Fireball Mode
 `````````````
@@ -840,11 +997,86 @@ priority.
 6.  Host variables from inventory.
 
 7.  Group variables from inventory in inheritance order.  This means if a group includes a sub-group, the variables
-in the subgroup have higher precedence.
+    in the subgroup have higher precedence.
 
 Therefore, if you want to set a default value for something you wish to override somewhere else, the best
 place to set such a default is in a group variable.  The 'group_vars/all' file makes an excellent place to put global
 variables that are true across your entire site, since everything has higher priority than these values.
+
+
+Check Mode ("Dry Run") --check
+```````````````````````````````
+
+.. versionadded:: 1.1
+
+When ansible-playbook is executed with --check it will not make any changes on remote systems.  Instead, any module
+instrumented to support 'check mode' (which contains the primary core modules, but it is not required that all modules do
+this) will report what changes they would have made.  Other modules that do not support check mode will also take no
+action, but just will not report what changes they might have made.
+
+Check mode is just a simulation, and if you have steps that use conditionals that depend on the results of prior commands,
+it may be less useful for you.  However it is great for one-node-at-time basic configuration management use cases.
+
+Example::
+
+    ansible-playbook foo.yml --check
+
+Showing Differences with --diff
+```````````````````````````````
+
+.. versionadded:: 1.1
+
+The --diff option to ansible-playbook works great with --check (detailed above) but can also be used by itself.  When this flag is supplied, if any templated files on the remote system are changed, and the ansible-playbook CLI will report back
+the textual changes made to the file (or, if used with --check, the changes that would have been made).  Since the diff
+feature produces a large amount of output, it is best used when checking a single host at a time, like so::
+
+    ansible-playbook foo.yml --check --diff --limit foo.example.com
+
+Dictionary & Nested (Complex) Arguments
+```````````````````````````````````````
+
+As a review, most tasks in ansbile are of this form::
+
+    tasks:
+
+      - name: ensure the cobbler package is installed
+        yum: name=cobbler state=installed
+
+However, in some cases, it may be useful to feed arguments directly in from a hash (dictionary).  In fact, a very small
+number of modules (the CloudFormations module is one) actually require complex arguments.  They work like this::
+
+    tasks:
+
+      - name: call a module that requires some complex arguments
+        foo_module:
+           fibonacci_list:
+             - 1
+             - 1
+             - 2
+             - 3
+           my_pets:
+             dogs:
+               - fido
+               - woof
+             fish:
+               - limpet
+               - nemo
+               - ${other_fish_name}
+
+You can of course use variables inside these, as noted above.
+
+If using local_action, you can do this::
+
+    - name: call a module that requires some complex arguments
+      local_action:
+        module: foo_module
+        arg1: 1234
+        arg2: 'asdf'
+
+Which of course means, though more verbose, this is also technically legal syntax::
+
+    - name: foo
+      template: { src: '/templates/motd.j2', dest: '/etc/motd' }
 
 Style Points
 ````````````
