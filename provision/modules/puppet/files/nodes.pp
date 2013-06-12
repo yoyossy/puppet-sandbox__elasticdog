@@ -62,6 +62,10 @@ node 'asusxsmaison' {
 }
 ##########################################
 node 'vento' {
+#exec { 'yum update':
+#        path=>'/usr/bin/'
+#}
+
   class { 'helloworld': }
   class { 'networking': }
 
@@ -129,13 +133,46 @@ sysctl { "net.ipv4.ip_forward":
       port => 21,
       action => 'accept';
 
- }     
+ }    
+
+include user-lio
+
+
   class { 'vsftpd':
   anonymous_enable  => 'NO',
+  local_enable            => 'YES',
   write_enable      => 'YES',
-  ftpd_banner       => 'Marmotte FTP Server',
-  chroot_local_user => 'YES',
+  ftpd_banner       => 'Vento FTP Server',
+  chroot_local_user => 'NO',
+  chroot_list_enable      => 'NO',
+  anon_upload_enable => 'YES',
+  anon_mkdir_write_enable => 'YES',
+#  local_umask => '077',
 }
+exec { 'setsebool -P ftp_home_dir on':
+        path=>'/usr/sbin/'
+}
+class { 'selinux':
+  mode => 'enforcing'
+}
+
+exec { 'rpm -Uvh --replacepkgs http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm':
+        path=>'/bin/'
+}
+exec { 'yum -y update':
+        path=>'/usr/bin/'
+}
+
+package { 'fuse':
+        provider=>'yum',
+        ensure=>'installed'
+}
+package { 'ntfs-3g':
+        provider=>'yum',
+        ensure=>'installed'
+}
+
+
 }
 #############################
 node 'dv7' {
