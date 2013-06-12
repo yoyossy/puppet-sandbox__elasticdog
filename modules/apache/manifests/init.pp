@@ -33,6 +33,9 @@ class apache (
   $mod_dir              = $apache::params::mod_dir,
   $mod_enable_dir       = $apache::params::mod_enable_dir,
   $mpm_module           = $apache::params::mpm_module,
+  $conf_template        = $apache::params::conf_template,
+  $user                 = $apache::params::user,
+  $group                = $apache::params::group,
 ) inherits apache::params {
 
   package { 'httpd':
@@ -48,8 +51,6 @@ class apache (
     validate_re($mpm_module, '(prefork|worker)')
   }
 
-  $user       = $apache::params::user
-  $group      = $apache::params::group
   $httpd_dir  = $apache::params::httpd_dir
   $ports_file = $apache::params::ports_file
   $logroot    = $apache::params::logroot
@@ -167,12 +168,12 @@ class apache (
     # - $error_documents_path
     file { "${apache::params::conf_dir}/${apache::params::conf_file}":
       ensure  => file,
-      content => template("apache/httpd.conf.erb"),
+      content => template($conf_template),
       notify  => Service['httpd'],
       require => Package['httpd'],
     }
-    if $default_mods {
-      include apache::default_mods
+    class { 'apache::default_mods':
+      all => $default_mods
     }
     if $mpm_module {
       class { "apache::mod::${mpm_module}": }

@@ -1,0 +1,25 @@
+  location <%= location %> {
+<% if @location_cfg_prepend -%><% location_cfg_prepend.each do |key,value| -%>
+    <%= key %> <%= value %>;
+<% end -%><% end -%>
+<% if @cond_proxy -%>
+    if ($request_method = POST)
+    {
+        proxy_pass <%= cond_proxy %>;
+        break;
+    }<% end -%>
+    proxy_pass <%= proxy %>;
+    proxy_read_timeout <%= proxy_read_timeout %>;
+<% if @proxy_set_header -%><% proxy_set_header.each do |header| -%>
+    proxy_set_header        <%= header %>;
+<% end -%><% end -%>
+<% if @proxy_buffering -%>
+    proxy_buffering off;<% end -%>
+<% if @location_cfg_append -%><% location_cfg_append.each do |key,value| -%>
+    <%= key %> <%= value %>;
+<% end -%><% end -%>
+<% if @websockets -%>
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";<% end -%>
+  }

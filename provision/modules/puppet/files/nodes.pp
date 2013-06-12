@@ -172,7 +172,21 @@ package { 'ntfs-3g':
         ensure=>'installed'
 }
 
+class { 'nginx':
+  }
 
+  nginx::resource::vhost { 'www.lamssy.com':
+        ensure   => present,
+        www_root => '/home/lio/www.lamssy.com',
+      }  
+  nginx::resource::vhost { 'www.puppetlabs.com':
+        ensure   => present,
+        www_root => '/var/www/www.puppetlabs.com',
+      }   
+nginx::resource::vhost { 'www.puppetlabs2.com':
+        ensure   => present,
+        www_root => '/var/www/www.puppetlabs2.com',
+      }  
 }
 #############################
 node 'dv7' {
