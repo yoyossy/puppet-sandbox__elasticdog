@@ -162,7 +162,10 @@ exec { 'rpm -Uvh --replacepkgs http://download.fedoraproject.org/pub/epel/6/x86_
 exec { 'yum -y update':
         path=>'/usr/bin/'
 }
-
+package { 'rsync':
+        provider=>'yum',
+        ensure=>'installed'
+}
 package { 'fuse':
         provider=>'yum',
         ensure=>'installed'
