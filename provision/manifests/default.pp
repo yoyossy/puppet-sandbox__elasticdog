@@ -16,7 +16,7 @@ if $::is_vagrant {
     $data_center = 'amazon'
 }
 
-include role::ui
+#include role::ui
 #############################
 if $hostname == 'puppet' {
 
