@@ -49,6 +49,7 @@ package { ['lftp', 'createrepo','rsync','pyOpenSSL',
 }
 ##########################################
 node 'idea' {
+class { 'nscp':  }
  class { 'net_share':  }
  class { 'wintest': }
  class { 'win_desktop_shortcut': }

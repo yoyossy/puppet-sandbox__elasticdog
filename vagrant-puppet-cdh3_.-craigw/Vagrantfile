@@ -12,7 +12,7 @@ def define_vm config, role, index, ip, memory = 512
   config.vm.define "#{role}_#{id}" do |box|
     box.vm.customize [ "modifyvm", :id, "--memory", memory ]
     box.vm.box = "centos63_64"
-    box.vm.box_url = "https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box"
+    box.vm.box_url = "http://localhost/SOFTWs/BOXES/centos-6.3-64bit-puppet-vbox.4.2.4.box"
     box.vm.network :hostonly, "192.168.33.#{ip}", :netmask => "255.255.255.0"
     box.vm.host_name = "#{role.downcase.gsub(/[^a-z0-9]+/, '-')}-#{id}.hadoop.dev"
     #box.vm.provision :shell, :path => "script/bootstrap-vm.sh"
